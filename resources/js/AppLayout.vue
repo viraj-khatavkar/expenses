@@ -155,16 +155,12 @@
         </Disclosure>
 
         <div class="py-10">
-            <header>
-                <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <h1 class="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
-                        Dashboard
-                    </h1>
-                </div>
-            </header>
             <main>
                 <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-                    <!-- Your content -->
+                    <SuccessAlert v-if="$page.props.flash.success" class="mb-8">
+                        {{ $page.props.flash.success }}
+                    </SuccessAlert>
+                    <slot />
                 </div>
             </main>
         </div>
@@ -182,6 +178,7 @@ import {
     MenuItems,
 } from '@headlessui/vue';
 import { Bars3Icon, BellIcon, XMarkIcon } from '@heroicons/vue/24/outline';
+import SuccessAlert from './Components/Alerts/SuccessAlert.vue';
 
 const user = {
     name: 'Tom Cook',
