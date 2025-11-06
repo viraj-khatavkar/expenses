@@ -22,7 +22,7 @@ it('shows correct message for invalid credentials', function () {
 it('redirects to home page post correct login', function () {
     $user = User::factory()->create();
 
-    $page = visit('/login')
+    visit('/login')
         ->fill('email', $user->email)
         ->fill('password', 'password')
         ->press('Sign in')
