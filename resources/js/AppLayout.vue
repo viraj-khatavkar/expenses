@@ -1,4 +1,5 @@
 <template>
+    <Head title="Expenses Tracker" />
     <div class="min-h-full">
         <Disclosure
             as="nav"
@@ -169,7 +170,7 @@ import {
 } from '@headlessui/vue';
 import { Bars3Icon, BellIcon, XMarkIcon } from '@heroicons/vue/24/outline';
 import SuccessAlert from './Components/Alerts/SuccessAlert.vue';
-import { Link, usePage } from '@inertiajs/vue3';
+import { Head, Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 
 const page = usePage();
@@ -184,7 +185,5 @@ const navigation = computed(() => {
     ];
 });
 
-const userNavigation = [
-    { name: 'Sign out', href: '#' },
-];
+const userNavigation = [{ name: 'Sign out', href: '#' }];
 </script>
