@@ -9,7 +9,7 @@ Route::middleware('auth')->group(function () {
         return inertia('Home');
     });
 
-    Route::resource('/categories', CategoriesController::class);
+    Route::resource('/categories', CategoriesController::class)->except('show', 'destroy');
 });
 
 Route::get('/login', [AuthController::class, 'loginView'])->name('login');

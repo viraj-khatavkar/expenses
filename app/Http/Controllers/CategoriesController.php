@@ -31,7 +31,7 @@ class CategoriesController extends Controller
     public function store(Request $request)
     {
         $attributes = $request->validate([
-            'name' => ['required'],
+            'name' => ['required', 'max:100'],
         ]);
 
         Category::create($attributes);
@@ -40,34 +40,27 @@ class CategoriesController extends Controller
     }
 
     /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
+    public function edit(Category $category)
     {
-        return inertia('Categories/Edit');
+        return inertia('Categories/Edit', [
+            'category' => $category,
+        ]);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Category $category)
     {
-        //
-    }
+        $request->validate([
+            'name' => ['required', 'max:100'],
+        ]);
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        $category->name = $request->name;
+        $category->save();
+
+        return redirect()->to('/categories')->with('success', 'Category updated successfully.');
     }
 }

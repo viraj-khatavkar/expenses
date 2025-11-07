@@ -45,7 +45,11 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
+function loginAs($email, $password = 'password')
 {
-    // ..
+    return visit('/login')
+        ->fill('email', $email)
+        ->fill('password', $password)
+        ->press('Sign in')
+        ->assertPathIs('/');
 }

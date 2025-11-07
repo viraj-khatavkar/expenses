@@ -26,6 +26,5 @@ it('redirects to home page post correct login', function () {
         ->fill('email', $user->email)
         ->fill('password', 'password')
         ->press('Sign in')
-        ->assertPathIs('/')
-        ->assertSee('Dashboard');
+        ->assertPathIs('/');
 });

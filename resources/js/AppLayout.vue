@@ -8,11 +8,9 @@
             <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 <div class="flex h-16 justify-between">
                     <div class="flex">
-                        <div class="flex shrink-0 items-center">
-                            Expenses Tracker
-                        </div>
+                        <div class="flex shrink-0 items-center">Expenses Tracker</div>
                         <div class="hidden sm:-my-px sm:ml-6 sm:flex sm:space-x-8">
-                            <a
+                            <Link
                                 v-for="item in navigation"
                                 :key="item.name"
                                 :href="item.href"
@@ -23,8 +21,9 @@
                                     'inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium',
                                 ]"
                                 :aria-current="item.current ? 'page' : undefined"
-                                >{{ item.name }}</a
                             >
+                                {{ item.name }}
+                            </Link>
                         </div>
                     </div>
                     <div class="hidden sm:ml-6 sm:flex sm:items-center">
@@ -44,11 +43,7 @@
                             >
                                 <span class="absolute -inset-1.5"></span>
                                 <span class="sr-only">Open user menu</span>
-                                <img
-                                    class="size-8 rounded-full outline -outline-offset-1 outline-black/5 dark:outline-white/10"
-                                    :src="user.imageUrl"
-                                    alt=""
-                                />
+                                {{ user.name }}
                             </MenuButton>
 
                             <transition
@@ -67,7 +62,7 @@
                                         :key="item.name"
                                         v-slot="{ active }"
                                     >
-                                        <a
+                                        <Link
                                             :href="item.href"
                                             :class="[
                                                 active
@@ -75,8 +70,9 @@
                                                     : '',
                                                 'block px-4 py-2 text-sm text-gray-700 dark:text-gray-300',
                                             ]"
-                                            >{{ item.name }}</a
                                         >
+                                            {{ item.name }}
+                                        </Link>
                                     </MenuItem>
                                 </MenuItems>
                             </transition>
@@ -96,13 +92,14 @@
                 </div>
             </div>
 
-            <DisclosurePanel class="sm:hidden">
+            <DisclosurePanel class="sm:hidden" v-slot="{ close }">
                 <div class="space-y-1 pt-2 pb-3">
-                    <DisclosureButton
+                    <Link
                         v-for="item in navigation"
                         :key="item.name"
                         as="a"
                         :href="item.href"
+                        @click="close"
                         :class="[
                             item.current
                                 ? 'border-indigo-600 bg-indigo-50 text-indigo-700 dark:border-indigo-500 dark:bg-indigo-600/10 dark:text-indigo-300'
@@ -111,17 +108,10 @@
                         ]"
                         :aria-current="item.current ? 'page' : undefined"
                         >{{ item.name }}
-                    </DisclosureButton>
+                    </Link>
                 </div>
                 <div class="border-t border-gray-200 pt-4 pb-3 dark:border-gray-700">
                     <div class="flex items-center px-4">
-                        <div class="shrink-0">
-                            <img
-                                class="size-10 rounded-full outline -outline-offset-1 outline-black/5 dark:outline-white/10"
-                                :src="user.imageUrl"
-                                alt=""
-                            />
-                        </div>
                         <div class="ml-3">
                             <div class="text-base font-medium text-gray-800 dark:text-white">
                                 {{ user.name }}
@@ -154,7 +144,7 @@
             </DisclosurePanel>
         </Disclosure>
 
-        <div class="py-10">
+        <div class="lg:py-10">
             <main>
                 <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
                     <SuccessAlert v-if="$page.props.flash.success" class="mb-8">
@@ -179,22 +169,22 @@ import {
 } from '@headlessui/vue';
 import { Bars3Icon, BellIcon, XMarkIcon } from '@heroicons/vue/24/outline';
 import SuccessAlert from './Components/Alerts/SuccessAlert.vue';
+import { Link, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 
-const user = {
-    name: 'Tom Cook',
-    email: 'tom@example.com',
-    imageUrl:
-        'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-};
-const navigation = [
-    { name: 'Home', href: '/', current: true },
-    { name: 'Categories', href: '/categories', current: false },
-    { name: 'Expenses', href: '/expenses', current: false },
-    { name: 'Reports', href: '/reports', current: false },
-];
+const page = usePage();
+const user = computed(() => page.props.auth.user);
+
+const navigation = computed(() => {
+    return [
+        { name: 'Home', href: '/', current: page.url === '/' },
+        { name: 'Categories', href: '/categories', current: page.url.startsWith('/categories') },
+        { name: 'Expenses', href: '/expenses', current: page.url.startsWith('/expenses') },
+        { name: 'Reports', href: '/reports', current: page.url.startsWith('/reports') },
+    ];
+});
+
 const userNavigation = [
-    { name: 'Your profile', href: '#' },
-    { name: 'Settings', href: '#' },
     { name: 'Sign out', href: '#' },
 ];
 </script>
