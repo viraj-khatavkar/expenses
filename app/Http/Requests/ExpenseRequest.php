@@ -14,4 +14,11 @@ class ExpenseRequest extends FormRequest
             'date' => ['required', 'date'],
         ];
     }
+
+    public function messages(): array
+    {
+        return [
+            'category_id.required' => 'The category field is required',
+        ];
+    }
 }
