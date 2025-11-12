@@ -23,7 +23,12 @@
                     v-model="expense.category_id"
                 />
             </div>
-            <PrimaryButton type="submit">Update</PrimaryButton>
+            <div class="flex gap-4">
+                <PrimaryButton type="submit">Update</PrimaryButton>
+                <DangerLinkButton :href="`/expenses/${expense.id}`" method="delete">
+                    Delete
+                </DangerLinkButton>
+            </div>
         </Form>
     </div>
 </template>
@@ -33,6 +38,7 @@ import { Form } from '@inertiajs/vue3';
 import SelectInput from '../../Components/Form/SelectInput.vue';
 import PrimaryButton from '../../Components/Button/PrimaryButton.vue';
 import TextInput from '../../Components/Form/TextInput.vue';
+import DangerLinkButton from '../../Components/Button/DangerLinkButton.vue';
 
 defineProps({
     expense: {
