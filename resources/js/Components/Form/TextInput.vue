@@ -17,11 +17,7 @@
                 }"
             />
         </div>
-        <p
-            v-if="error"
-            class="mt-2 text-sm text-red-600 dark:text-red-400"
-            id="email-error"
-        >
+        <p v-if="error" class="mt-2 text-sm text-red-600 dark:text-red-400" :id="`${name}-error`">
             {{ error }}
         </p>
     </div>
