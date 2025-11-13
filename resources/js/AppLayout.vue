@@ -147,11 +147,20 @@
 
         <div class="lg:py-10">
             <main>
-                <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+                <div class="relative mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
                     <SuccessAlert v-if="$page.props.flash.success" class="mb-8">
                         {{ $page.props.flash.success }}
                     </SuccessAlert>
+
                     <slot />
+
+                    <Link
+                        data-test="add-expense-button"
+                        href="/expenses/create"
+                        class="fixed right-[max(2rem,calc((100vw-80rem)/2+2rem))] bottom-8 h-14 w-14 justify-around rounded-full bg-indigo-600 p-4 text-center text-white hover:bg-indigo-500"
+                    >
+                        <PlusIcon />
+                    </Link>
                 </div>
             </main>
         </div>
@@ -168,10 +177,11 @@ import {
     MenuItem,
     MenuItems,
 } from '@headlessui/vue';
-import { Bars3Icon, BellIcon, XMarkIcon } from '@heroicons/vue/24/outline';
+import { Bars3Icon, BellIcon, XMarkIcon, PlusIcon } from '@heroicons/vue/24/outline';
 import SuccessAlert from './Components/Alerts/SuccessAlert.vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
+import PrimaryButton from './Components/Button/PrimaryButton.vue';
 
 const page = usePage();
 const user = computed(() => page.props.auth.user);

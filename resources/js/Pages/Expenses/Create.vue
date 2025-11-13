@@ -17,7 +17,7 @@
                     :error="errors.category_id"
                 />
             </div>
-            <PrimaryButton type="submit">Create Expense</PrimaryButton>
+            <PrimaryButton type="submit">Add Expense</PrimaryButton>
         </Form>
     </div>
 </template>
