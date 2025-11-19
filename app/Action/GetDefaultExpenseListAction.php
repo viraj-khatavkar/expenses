@@ -2,9 +2,10 @@
 
 namespace App\Action;
 
-use App\Models\Expense;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Date;
+
+use function app;
 
 final readonly class GetDefaultExpenseListAction
 {
@@ -13,8 +14,8 @@ final readonly class GetDefaultExpenseListAction
      */
     public function handle()
     {
-        return Expense::query()
-            ->where('date', '>', Date::now()->subMonth()->startOfMonth()->format('Y-m-d'))
+        return app(GetExpensesAction::class)
+            ->handle(Date::now()->subMonth()->startOfMonth(), Date::now()->endOfMonth())
             ->orderByDesc('date')
             ->with('category')
             ->get()
