@@ -5,7 +5,7 @@ namespace App\Action;
 use App\Models\Expense;
 use Illuminate\Support\Facades\Date;
 
-class GetTotalExpensesForCurrentMonthAction
+final readonly class GetTotalExpensesForCurrentMonthAction
 {
     public function handle()
     {

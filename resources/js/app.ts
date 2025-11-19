@@ -1,4 +1,5 @@
 import { createInertiaApp } from '@inertiajs/vue3';
+import type { DefineComponent } from 'vue';
 import { createApp, h } from 'vue';
 import '../css/app.css';
 import AppLayout from './AppLayout.vue';
@@ -6,7 +7,7 @@ import './bootstrap';
 
 createInertiaApp({
     resolve: (name) => {
-        const pages = import.meta.glob('./Pages/**/*.vue', { eager: true });
+        const pages = import.meta.glob<DefineComponent>('./Pages/**/*.vue', { eager: true });
         let page = pages[`./Pages/${name}.vue`];
         page.default.layout = page.default.layout || AppLayout;
         return page;

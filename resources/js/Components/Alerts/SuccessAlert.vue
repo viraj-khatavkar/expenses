@@ -15,6 +15,6 @@
     </div>
 </template>
 
-<script setup>
-import { CheckCircleIcon, XMarkIcon } from '@heroicons/vue/20/solid';
+<script setup lang="ts">
+import { CheckCircleIcon } from '@heroicons/vue/20/solid';
 </script>

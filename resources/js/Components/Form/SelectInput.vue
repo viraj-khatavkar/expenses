@@ -25,33 +25,20 @@
     </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ChevronDownIcon } from '@heroicons/vue/16/solid';
 
 const model = defineModel();
 
-defineProps({
-    label: {
-        type: String,
-        required: true,
-    },
-    name: {
-        type: String,
-        required: true,
-    },
-    id: {
-        type: String,
-        required: false,
-        default: `select-input-${crypto.randomUUID()}`,
-    },
-    options: {
-        type: Array,
-        required: true,
-    },
-    error: {
-        type: String,
-        required: false,
-        default: null,
-    },
+interface Props {
+    label: string;
+    name: string;
+    id?: string;
+    options: Array;
+    error?: string;
+}
+
+withDefaults(defineProps<Props>(), {
+    id: `select-input-${crypto.randomUUID()}`,
 });
 </script>

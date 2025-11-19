@@ -83,9 +83,9 @@
     </div>
 </template>
 
-<script setup>
-import AuthLayout from '../../AuthLayout.vue';
+<script setup lang="ts">
 import { Form } from '@inertiajs/vue3';
+import AuthLayout from '../../AuthLayout.vue';
 
 defineOptions({ layout: AuthLayout });
 </script>

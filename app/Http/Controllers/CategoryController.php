@@ -3,14 +3,18 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Inertia\Response;
 
-class CategoryController extends Controller
+use function to_route;
+
+final class CategoryController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(): Response
     {
         return inertia('Categories/Index', [
             'categories' => Category::all(),
@@ -20,7 +24,7 @@ class CategoryController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(): Response
     {
         return inertia('Categories/Create');
     }
@@ -28,7 +32,7 @@ class CategoryController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         $attributes = $request->validate([
             'name' => ['required', 'max:100'],
@@ -36,13 +40,13 @@ class CategoryController extends Controller
 
         Category::create($attributes);
 
-        return redirect()->to('/categories')->with('success', 'Category created successfully.');
+        return to_route('categories.index')->with('success', 'Category created successfully.');
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Category $category)
+    public function edit(Category $category): Response
     {
         return inertia('Categories/Edit', [
             'category' => $category,
@@ -52,7 +56,7 @@ class CategoryController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Category $category)
+    public function update(Request $request, Category $category): RedirectResponse
     {
         $request->validate([
             'name' => ['required', 'max:100'],
@@ -61,6 +65,6 @@ class CategoryController extends Controller
         $category->name = $request->name;
         $category->save();
 
-        return redirect()->to('/categories')->with('success', 'Category updated successfully.');
+        return to_route('categories.index')->with('success', 'Category updated successfully.');
     }
 }

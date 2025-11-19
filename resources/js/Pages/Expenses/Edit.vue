@@ -33,21 +33,17 @@
     </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import { Category } from '@/types/app/Models/Category';
+import { Expense } from '@/types/app/Models/Expense';
 import { Form } from '@inertiajs/vue3';
-import SelectInput from '../../Components/Form/SelectInput.vue';
-import PrimaryButton from '../../Components/Button/PrimaryButton.vue';
-import TextInput from '../../Components/Form/TextInput.vue';
 import DangerLinkButton from '../../Components/Button/DangerLinkButton.vue';
+import PrimaryButton from '../../Components/Button/PrimaryButton.vue';
+import SelectInput from '../../Components/Form/SelectInput.vue';
+import TextInput from '../../Components/Form/TextInput.vue';
 
-defineProps({
-    expense: {
-        type: Object,
-        required: true,
-    },
-    categories: {
-        type: Array,
-        required: true,
-    },
-});
+defineProps<{
+    expense: Expense;
+    categories: Category[];
+}>();
 </script>

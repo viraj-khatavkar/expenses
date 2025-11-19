@@ -46,18 +46,13 @@
         </nav>
     </div>
 </template>
-<script setup>
+<script setup lang="ts">
+import { Expense } from '@/types/app/Models/Expense';
+import currencyFormatter from '@/utils/currencyFormatter';
 import { Link } from '@inertiajs/vue3';
-import currencyFormatter from '../../utils/currencyFormatter.js';
 
-defineProps({
-    expenses: {
-        type: Object,
-        required: true,
-    },
-    total: {
-        type: Number,
-        required: true,
-    },
-});
+defineProps<{
+    expenses: Expense[];
+    total: Number;
+}>();
 </script>

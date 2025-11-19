@@ -13,6 +13,6 @@
     </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { XCircleIcon } from '@heroicons/vue/20/solid';
 </script>

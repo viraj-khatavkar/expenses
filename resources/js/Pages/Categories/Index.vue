@@ -21,14 +21,12 @@
     </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import { Category } from '@/types/app/Models/Category';
 import { Link } from '@inertiajs/vue3';
 import PrimaryButton from '../../Components/Button/PrimaryButton.vue';
 
-defineProps({
-    categories: {
-        type: Array,
-        required: true,
-    },
-});
+defineProps<{
+    categories: Category[];
+}>();
 </script>

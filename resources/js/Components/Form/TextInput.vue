@@ -23,35 +23,19 @@
     </div>
 </template>
 
-<script setup>
-const props = defineProps({
-    type: {
-        type: String,
-        default: 'text',
-    },
-    label: {
-        type: String,
-        required: true,
-    },
-    name: {
-        type: String,
-        required: true,
-    },
-    id: {
-        type: String,
-        required: false,
-        default: `text-input-${crypto.randomUUID()}`,
-    },
-    placeholder: {
-        type: String,
-        required: false,
-        default: '',
-    },
-    error: {
-        type: String,
-        required: false,
-        default: null,
-    },
+<script setup lang="ts">
+interface PropTypes {
+    type?: string;
+    label: string;
+    name: string;
+    id?: string;
+    placeholder?: string;
+    error?: string;
+}
+
+withDefaults(defineProps<PropTypes>(), {
+    type: 'text',
+    id: `text-input-${crypto.randomUUID()}`,
 });
 
 const model = defineModel();

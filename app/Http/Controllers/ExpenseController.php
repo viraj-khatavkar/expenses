@@ -7,17 +7,21 @@ use App\Action\GetTotalExpensesForCurrentMonthAction;
 use App\Http\Requests\ExpenseRequest;
 use App\Models\Category;
 use App\Models\Expense;
+use Illuminate\Http\RedirectResponse;
+use Inertia\Response;
 
-class ExpenseController extends Controller
+use function to_route;
+
+final class ExpenseController extends Controller
 {
-    public function create()
+    public function create(): Response
     {
         return inertia('Expenses/Create', [
             'categories' => Category::all(),
         ]);
     }
 
-    public function index()
+    public function index(): Response
     {
         return inertia('Expenses/Index', [
             'expenses' => app(GetDefaultExpenseListAction::class)->handle(),
@@ -25,14 +29,14 @@ class ExpenseController extends Controller
         ]);
     }
 
-    public function store(ExpenseRequest $request)
+    public function store(ExpenseRequest $request): RedirectResponse
     {
         Expense::create($request->validated());
 
-        return redirect()->to('/expenses')->with('success', 'Expense created successfully.');
+        return to_route('expenses.index')->with('success', 'Expense created successfully.');
     }
 
-    public function edit(Expense $expense)
+    public function edit(Expense $expense): Response
     {
         return inertia('Expenses/Edit', [
             'expense' => $expense,
@@ -40,17 +44,17 @@ class ExpenseController extends Controller
         ]);
     }
 
-    public function update(ExpenseRequest $request, Expense $expense)
+    public function update(ExpenseRequest $request, Expense $expense): RedirectResponse
     {
         $expense->update($request->validated());
 
-        return redirect()->to('/expenses')->with('success', 'Expense updated successfully.');
+        return to_route('expenses.index')->with('success', 'Expense updated successfully.');
     }
 
-    public function destroy(Expense $expense)
+    public function destroy(Expense $expense): RedirectResponse
     {
         $expense->delete();
 
-        return redirect()->to('/expenses')->with('success', 'Expense deleted successfully.');
+        return to_route('expenses.index')->with('success', 'Expense deleted successfully.');
     }
 }

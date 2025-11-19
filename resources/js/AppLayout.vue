@@ -167,7 +167,8 @@
     </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import { User } from '@/types/app/Models/User';
 import {
     Disclosure,
     DisclosureButton,
@@ -177,14 +178,13 @@ import {
     MenuItem,
     MenuItems,
 } from '@headlessui/vue';
-import { Bars3Icon, BellIcon, XMarkIcon, PlusIcon } from '@heroicons/vue/24/outline';
-import SuccessAlert from './Components/Alerts/SuccessAlert.vue';
+import { Bars3Icon, BellIcon, PlusIcon, XMarkIcon } from '@heroicons/vue/24/outline';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
-import PrimaryButton from './Components/Button/PrimaryButton.vue';
+import SuccessAlert from './Components/Alerts/SuccessAlert.vue';
 
 const page = usePage();
-const user = computed(() => page.props.auth.user);
+const user: User = computed(() => page.props.auth.user);
 
 const navigation = computed(() => {
     return [

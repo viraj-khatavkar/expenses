@@ -7,8 +7,8 @@
     </div>
 </template>
 
-<script setup>
-import { Form, Link } from '@inertiajs/vue3';
-import TextInput from '../../Components/Form/TextInput.vue';
+<script setup lang="ts">
+import { Form } from '@inertiajs/vue3';
 import PrimaryButton from '../../Components/Button/PrimaryButton.vue';
+import TextInput from '../../Components/Form/TextInput.vue';
 </script>

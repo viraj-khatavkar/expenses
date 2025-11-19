@@ -6,7 +6,7 @@ use App\Models\Expense;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Date;
 
-class GetDefaultExpenseListAction
+final readonly class GetDefaultExpenseListAction
 {
     /**
      * Create a new class instance.

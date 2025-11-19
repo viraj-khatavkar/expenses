@@ -2,17 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Response;
 
-class AuthController extends Controller
+final class AuthController extends Controller
 {
-    public function loginView()
+    public function loginView(): Response
     {
         return inertia('Auth/Login');
     }
 
-    public function loginPost(Request $request)
+    public function loginPost(Request $request): RedirectResponse
     {
         $credentials = $request->validate([
             'email' => ['required', 'email'],

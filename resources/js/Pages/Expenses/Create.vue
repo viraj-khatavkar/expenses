@@ -22,19 +22,17 @@
     </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import { Category } from '@/types/app/Models/Category';
 import { Form } from '@inertiajs/vue3';
-import TextInput from '../../Components/Form/TextInput.vue';
+import dayjs from 'dayjs';
 import PrimaryButton from '../../Components/Button/PrimaryButton.vue';
 import SelectInput from '../../Components/Form/SelectInput.vue';
-import dayjs from 'dayjs';
+import TextInput from '../../Components/Form/TextInput.vue';
 
-defineProps({
-    categories: {
-        type: Array,
-        required: true,
-    },
-});
+defineProps<{
+    categories: Category[];
+}>();
 
 const defaultDate = dayjs().format('YYYY-MM-DD');
 </script>

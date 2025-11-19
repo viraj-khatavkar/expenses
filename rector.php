@@ -18,6 +18,9 @@ return RectorConfig::configure()
         LaravelSetList::LARAVEL_IF_HELPERS,
         LaravelSetList::LARAVEL_LEGACY_FACTORIES_TO_CLASSES,
     ])
+    ->withImportNames(
+        removeUnusedImports: true,
+    )
     ->withComposerBased(laravel: true)
     ->withPaths([
         __DIR__.'/app',
