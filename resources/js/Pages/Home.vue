@@ -10,7 +10,7 @@
         <Divider>Monthly</Divider>
 
         <div class="grid grid-cols-1 lg:grid-cols-3">
-            <div v-for="monthlyStat in thisYearMonthlyTotals">
+            <div v-for="monthlyStat in thisYearMonthlyTotals" :key="monthlyStat.month">
                 <Stat>
                     <template #header>{{ monthlyStat.month }}</template>
                     <template #default>{{ currencyFormatter(monthlyStat.total) }}</template>
@@ -21,7 +21,7 @@
         <Divider> Categories</Divider>
 
         <div class="grid grid-cols-1 lg:grid-cols-3">
-            <div v-for="categoryStat in thisYearCategoryTotals">
+            <div v-for="categoryStat in thisYearCategoryTotals" :key="categoryStat.category">
                 <Stat>
                     <template #header>{{ categoryStat.category }}</template>
                     <template #default>{{ currencyFormatter(categoryStat.total) }}</template>
