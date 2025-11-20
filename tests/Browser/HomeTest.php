@@ -3,6 +3,7 @@
 use App\Models\Category;
 use App\Models\Expense;
 use App\Models\User;
+use Illuminate\Support\Str;
 
 it('shows correct total for current year', function ($amountOne, $amountTwo, $amountThree, $total) {
     $user = User::factory()->create();
@@ -27,7 +28,7 @@ it('shows correct total for january', function () {
     $amounts = [18392, 27451, 35780, 12945, 49332, 6814, 31609, 19876, 15204, 25164];
 
     foreach ($amounts as $amount) {
-        $date = date('Y').'-01-'.random_int(10, 31);
+        $date = date('Y').'-01-'.Str::padLeft(random_int(1, 31), 2, '0');
         Expense::factory()->create(['date' => $date, 'amount' => $amount, 'category_id' => $categoryIds->random()]);
     }
 
@@ -42,14 +43,14 @@ it('shows correct total for jan and feb', function () {
     $amounts = [18392, 27451, 35780, 12945, 49332, 6814, 31609, 19876, 15204, 25164];
 
     foreach ($amounts as $amount) {
-        $date = date('Y').'-01-'.random_int(10, 31);
+        $date = date('Y').'-01-'.Str::padLeft(random_int(1, 31), 2, '0');
         Expense::factory()->create(['date' => $date, 'amount' => $amount, 'category_id' => $categoryIds->random()]);
     }
 
     $amounts = [43123, 55217, 23819, 87433, 17654, 64351, 12789, 19096];
 
     foreach ($amounts as $amount) {
-        $date = date('Y').'-02-'.random_int(10, 28);
+        $date = date('Y').'-02-'.Str::padLeft(random_int(1, 28), 2, '0');
         Expense::factory()->create(['date' => $date, 'amount' => $amount, 'category_id' => $categoryIds->random()]);
     }
 
@@ -66,7 +67,7 @@ it('shows correct total for all twelve months', function () {
     $amounts = [18392, 27451, 35780, 12945, 49332, 6814, 31609, 19876, 15204, 25164];
 
     foreach ($amounts as $amount) {
-        $date = date('Y').'-01-'.random_int(10, 31);
+        $date = date('Y').'-01-'.Str::padLeft(random_int(1, 31), 2, '0');
         Expense::factory()->create(['date' => $date, 'amount' => $amount, 'category_id' => $categoryIds->random()]);
     }
 
@@ -74,7 +75,7 @@ it('shows correct total for all twelve months', function () {
     $amounts = [43123, 55217, 23819, 87433, 17654, 64351, 12789, 19096];
 
     foreach ($amounts as $amount) {
-        $date = date('Y').'-02-'.random_int(10, 28);
+        $date = date('Y').'-02-'.Str::padLeft(random_int(1, 28), 2, '0');
         Expense::factory()->create(['date' => $date, 'amount' => $amount, 'category_id' => $categoryIds->random()]);
     }
 
@@ -82,7 +83,7 @@ it('shows correct total for all twelve months', function () {
     $amounts = [31257, 48291, 17943, 26517, 38951, 21439, 17563, 12410];
 
     foreach ($amounts as $amount) {
-        $date = date('Y').'-03-'.random_int(10, 31);
+        $date = date('Y').'-03-'.Str::padLeft(random_int(1, 31), 2, '0');
         Expense::factory()->create(['date' => $date, 'amount' => $amount, 'category_id' => $categoryIds->random()]);
     }
 
@@ -90,7 +91,7 @@ it('shows correct total for all twelve months', function () {
     $amounts = [55321, 42753, 36817, 21991, 71239, 49833, 15927, 4548];
 
     foreach ($amounts as $amount) {
-        $date = date('Y').'-04-'.random_int(10, 30);
+        $date = date('Y').'-04-'.Str::padLeft(random_int(1, 30), 2, '0');
         Expense::factory()->create(['date' => $date, 'amount' => $amount, 'category_id' => $categoryIds->random()]);
     }
 
@@ -98,7 +99,7 @@ it('shows correct total for all twelve months', function () {
     $amounts = [38119, 27451, 19837, 45673, 31992, 12789, 22987, 3598];
 
     foreach ($amounts as $amount) {
-        $date = date('Y').'-05-'.random_int(10, 31);
+        $date = date('Y').'-05-'.Str::padLeft(random_int(1, 31), 2, '0');
         Expense::factory()->create(['date' => $date, 'amount' => $amount, 'category_id' => $categoryIds->random()]);
     }
 
@@ -106,7 +107,7 @@ it('shows correct total for all twelve months', function () {
     $amounts = [73451, 55239, 41983, 61257, 38541, 27319, 52197, 216];
 
     foreach ($amounts as $amount) {
-        $date = date('Y').'-06-'.random_int(10, 30);
+        $date = date('Y').'-06-'.Str::padLeft(random_int(1, 30), 2, '0');
         Expense::factory()->create(['date' => $date, 'amount' => $amount, 'category_id' => $categoryIds->random()]);
     }
 
@@ -114,7 +115,7 @@ it('shows correct total for all twelve months', function () {
     $amounts = [19237, 26451, 31829, 17593, 28917, 33157, 12759, 4992];
 
     foreach ($amounts as $amount) {
-        $date = date('Y').'-07-'.random_int(10, 31);
+        $date = date('Y').'-07-'.Str::padLeft(random_int(1, 31), 2, '0');
         Expense::factory()->create(['date' => $date, 'amount' => $amount, 'category_id' => $categoryIds->random()]);
     }
 
@@ -122,7 +123,7 @@ it('shows correct total for all twelve months', function () {
     $amounts = [55064, 10671, 21006, 60082, 38945, 23391, 52316, 40832, 25945, 71718, 73681];
 
     foreach ($amounts as $amount) {
-        $date = date('Y').'-08-'.random_int(10, 31);
+        $date = date('Y').'-08-'.Str::padLeft(random_int(1, 31), 2, '0');
         Expense::factory()->create(['date' => $date, 'amount' => $amount, 'category_id' => $categoryIds->random()]);
     }
 
@@ -130,7 +131,7 @@ it('shows correct total for all twelve months', function () {
     $amounts = [67411, 53971, 11131, 14741, 44722, 68726, 51021, 28804, 15867, 48906, 78458, 27956];
 
     foreach ($amounts as $amount) {
-        $date = date('Y').'-09-'.random_int(10, 30);
+        $date = date('Y').'-09-'.Str::padLeft(random_int(1, 30), 2, '0');
         Expense::factory()->create(['date' => $date, 'amount' => $amount, 'category_id' => $categoryIds->random()]);
     }
 
@@ -138,7 +139,7 @@ it('shows correct total for all twelve months', function () {
     $amounts = [40391, 25816, 76586, 56009, 66933, 60431, 38183, 14164, 11664];
 
     foreach ($amounts as $amount) {
-        $date = date('Y').'-10-'.random_int(10, 31);
+        $date = date('Y').'-10-'.Str::padLeft(random_int(1, 31), 2, '0');
         Expense::factory()->create(['date' => $date, 'amount' => $amount, 'category_id' => $categoryIds->random()]);
     }
 
@@ -146,7 +147,7 @@ it('shows correct total for all twelve months', function () {
     $amounts = [65029, 70461, 20856, 33419, 31714, 79136];
 
     foreach ($amounts as $amount) {
-        $date = date('Y').'-11-'.random_int(10, 30);
+        $date = date('Y').'-11-'.Str::padLeft(random_int(1, 30), 2, '0');
         Expense::factory()->create(['date' => $date, 'amount' => $amount, 'category_id' => $categoryIds->random()]);
     }
 
@@ -154,7 +155,7 @@ it('shows correct total for all twelve months', function () {
     $amounts = [55064, 10671, 21006, 60082, 38945, 23391, 52316, 40832, 25945, 71718, 73681];
 
     foreach ($amounts as $amount) {
-        $date = date('Y').'-12-'.random_int(10, 31);
+        $date = date('Y').'-12-'.Str::padLeft(random_int(1, 31), 2, '0');
         Expense::factory()->create(['date' => $date, 'amount' => $amount, 'category_id' => $categoryIds->random()]);
     }
 
