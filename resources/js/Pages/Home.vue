@@ -1,6 +1,6 @@
 <template>
     <div>
-        <Stat>
+        <Stat id="yearly-stat">
             <template #header> This Year</template>
             <template #default>
                 {{ currencyFormatter(thisYearTotal) }}
@@ -11,7 +11,7 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-3">
             <div v-for="monthlyStat in thisYearMonthlyTotals" :key="monthlyStat.month">
-                <Stat>
+                <Stat :id="monthlyStat.month">
                     <template #header>{{ monthlyStat.month }}</template>
                     <template #default>{{ currencyFormatter(monthlyStat.total) }}</template>
                 </Stat>
@@ -22,7 +22,7 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-3">
             <div v-for="categoryStat in thisYearCategoryTotals" :key="categoryStat.category">
-                <Stat>
+                <Stat :id="categoryStat.category">
                     <template #header>{{ categoryStat.category }}</template>
                     <template #default>{{ currencyFormatter(categoryStat.total) }}</template>
                 </Stat>

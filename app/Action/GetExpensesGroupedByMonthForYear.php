@@ -14,7 +14,7 @@ final readonly class GetExpensesGroupedByMonthForYear
     public function handle(Carbon $date)
     {
         return app(GetExpensesAction::class)
-            ->handle($date->startOfYear(), $date->endOfYear())
+            ->handle($date->copy()->startOfYear(), $date->copy()->endOfYear())
             ->orderByDesc('date')
             ->get()
             ->groupBy(fn (Expense $expense) => Date::parse($expense->date)->format('Y-m'))

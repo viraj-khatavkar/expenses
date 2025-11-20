@@ -13,7 +13,7 @@ final readonly class GetExpensesGroupedByCategoryForYear
     public function handle(Carbon $date)
     {
         return app(GetExpensesAction::class)
-            ->handle($date->startOfYear(), $date->endOfYear())
+            ->handle($date->copy()->startOfYear(), $date->copy()->endOfYear())
             ->with('category')
             ->orderByDesc('date')
             ->get()
