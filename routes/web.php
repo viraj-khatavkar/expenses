@@ -10,6 +10,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/', HomeController::class);
     Route::resource('/categories', CategoryController::class)->except('show', 'destroy');
     Route::resource('/expenses', ExpenseController::class);
+    Route::post('/logout', [AuthController::class, 'logout']);
 });
 
 Route::get('/login', [AuthController::class, 'loginView'])->name('login');
