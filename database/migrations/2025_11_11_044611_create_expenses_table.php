@@ -12,7 +12,7 @@ return new class extends Migration
         Schema::create('expenses', function (Blueprint $table) {
             $table->id();
             $table->foreignIdFor(Category::class);
-            $table->date('date')->collation('binary')->index();
+            $table->date('date')->index();
             $table->decimal('amount');
             $table->timestamps();
             $table->softDeletes();

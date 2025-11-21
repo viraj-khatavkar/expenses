@@ -172,3 +172,39 @@ it('shows correct total for all twelve months', function () {
         ->assertSeeIn('#November', '3,00,615')
         ->assertSeeIn('#December', '4,73,651');
 });
+
+it('shows correct total for all categories', function () {
+    $user = User::factory()->create();
+    $categoryOne = Category::factory()->create(['name' => 'Grocery']);
+    $categoryTwo = Category::factory()->create(['name' => 'Starbucks']);
+    $categoryThree = Category::factory()->create(['name' => 'Food Delivery']);
+
+    // category 1
+    $amounts = [18392, 27451, 35780, 12945, 49332, 6814, 31609, 19876, 15204, 25164];
+
+    foreach ($amounts as $amount) {
+        $date = Date::now()->startOfYear()->addMonths(random_int(1, 11))->format('Y-m-d');
+        Expense::factory()->create(['date' => $date, 'amount' => $amount, 'category_id' => $categoryOne->id]);
+    }
+
+    // category 2
+    $amounts = [43123, 55217, 23819, 87433, 17654, 64351, 12789, 19096];
+
+    foreach ($amounts as $amount) {
+        $date = Date::now()->startOfYear()->addMonths(random_int(1, 11))->format('Y-m-d');
+        Expense::factory()->create(['date' => $date, 'amount' => $amount, 'category_id' => $categoryTwo->id]);
+    }
+
+    // category 3
+    $amounts = [31257, 48291, 17943, 26517, 38951, 21439, 17563, 12410];
+
+    foreach ($amounts as $amount) {
+        $date = Date::now()->startOfYear()->addMonths(random_int(1, 11))->format('Y-m-d');
+        Expense::factory()->create(['date' => $date, 'amount' => $amount, 'category_id' => $categoryThree->id]);
+    }
+
+    loginAs($user->email)
+        ->assertSeeIn('#Grocery', '2,42,567')
+        ->assertSeeIn('#Starbucks', '3,23,482')
+        ->assertSeeIn('#Food-Delivery', '2,14,371');
+});

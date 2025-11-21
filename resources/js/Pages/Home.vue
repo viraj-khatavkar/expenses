@@ -22,7 +22,7 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-3">
             <div v-for="categoryStat in thisYearCategoryTotals" :key="categoryStat.category">
-                <Stat :id="categoryStat.category">
+                <Stat :id="`${categoryStat.category.replace(' ', '-')}`">
                     <template #header>{{ categoryStat.category }}</template>
                     <template #default>{{ currencyFormatter(categoryStat.total) }}</template>
                 </Stat>
