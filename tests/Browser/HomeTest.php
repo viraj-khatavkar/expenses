@@ -159,6 +159,14 @@ it('shows correct total for all twelve months', function () {
         Expense::factory()->create(['date' => $date, 'amount' => $amount, 'category_id' => $categoryIds->random()]);
     }
 
+    // random month more than a year old
+    $amounts = [55064, 10671, 21006, 60082, 38945, 23391, 52316, 40832, 25945, 71718, 73681];
+
+    foreach ($amounts as $amount) {
+        $date = Date::now()->subYears(2)->addMonths(random_int(1, 11))->format('Y-m-d');
+        Expense::factory()->create(['date' => $date, 'amount' => $amount, 'category_id' => $categoryIds->random()]);
+    }
+
     loginAs($user->email)
         ->assertSeeIn('#January', '2,42,567')
         ->assertSeeIn('#February', '3,23,482')
@@ -200,6 +208,14 @@ it('shows correct total for all categories', function () {
 
     foreach ($amounts as $amount) {
         $date = Date::now()->startOfYear()->addMonths(random_int(1, 11))->format('Y-m-d');
+        Expense::factory()->create(['date' => $date, 'amount' => $amount, 'category_id' => $categoryThree->id]);
+    }
+
+    // category 3 - older than this year so not calculated
+    $amounts = [31257, 48291, 17943, 26517, 38951, 21439, 17563, 12410];
+
+    foreach ($amounts as $amount) {
+        $date = Date::now()->subYears(2)->addMonths(random_int(1, 11))->format('Y-m-d');
         Expense::factory()->create(['date' => $date, 'amount' => $amount, 'category_id' => $categoryThree->id]);
     }
 
