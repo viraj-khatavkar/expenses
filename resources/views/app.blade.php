@@ -7,7 +7,7 @@
     <!-- Fonts -->
     <link rel="stylesheet" href="https://rsms.me/inter/inter.css"/>
 
-    @vite(['resources/css/app.css', 'resources/js/app.ts'])
+    @vite(['resources/js/app.ts'])
     @inertiaHead
 </head>
 <body class="h-full">
