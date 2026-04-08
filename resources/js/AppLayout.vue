@@ -137,6 +137,7 @@ const navigation = computed(() => {
         { name: 'Home', href: '/', current: page.url === '/' },
         { name: 'Categories', href: '/categories', current: page.url.startsWith('/categories') },
         { name: 'Expenses', href: '/expenses', current: page.url.startsWith('/expenses') },
+        { name: 'Subscriptions', href: '/subscriptions', current: page.url.startsWith('/subscriptions') },
         { name: 'Reports', href: '/reports', current: page.url.startsWith('/reports') },
     ];
 });
