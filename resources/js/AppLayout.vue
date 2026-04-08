@@ -26,6 +26,17 @@
                                 {{ item.name }}
                             </Link>
                             <Link
+                                href="/account/password"
+                                :class="[
+                                    page.url.startsWith('/account')
+                                        ? 'border-indigo-600 text-gray-900 dark:border-indigo-500 dark:text-white'
+                                        : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:border-white/20 dark:hover:text-gray-200',
+                                    'inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium',
+                                ]"
+                            >
+                                Change Password
+                            </Link>
+                            <Link
                                 href="/logout"
                                 method="post"
                                 class="inline-flex cursor-pointer items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:border-white/20 dark:hover:text-gray-200"
@@ -66,11 +77,23 @@
                         >{{ item.name }}
                     </Link>
                     <Link
+                        href="/account/password"
+                        @click="close"
+                        :class="[
+                            page.url.startsWith('/account')
+                                ? 'border-indigo-600 bg-indigo-50 text-indigo-700 dark:border-indigo-500 dark:bg-indigo-600/10 dark:text-indigo-300'
+                                : 'border-transparent text-gray-600 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-800 dark:text-gray-400 dark:hover:border-gray-500 dark:hover:bg-white/5 dark:hover:text-gray-200',
+                            'block border-l-4 py-2 pr-4 pl-3 text-base font-medium',
+                        ]"
+                    >
+                        Change Password
+                    </Link>
+                    <Link
                         href="/logout"
                         method="post"
                         class="block cursor-pointer border-l-4 border-transparent py-2 pr-4 pl-3 text-base font-medium text-gray-600 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-800 dark:text-gray-400 dark:hover:border-gray-500 dark:hover:bg-white/5 dark:hover:text-gray-200"
                     >
-                        Sign Out 1
+                        Sign Out
                     </Link>
                 </div>
             </DisclosurePanel>
