@@ -11,16 +11,25 @@ use function app;
 
 final readonly class GetExpensesGroupedByMonthForYear
 {
-    public function handle(Carbon $date)
+    public function handle(Carbon $startDate, Carbon $endDate)
     {
         return app(GetExpensesAction::class)
-            ->handle($date->copy()->startOfYear(), $date->copy()->endOfYear())
-            ->orderByDesc('date')
+            ->handle($startDate, $endDate)
+            ->with('category')
             ->get()
             ->groupBy(fn (Expense $expense) => Date::parse($expense->date)->format('Y-m'))
+            ->sortKeys()
             ->map(fn (Collection $expenses, string $month) => [
                 'month' => Date::parse($month)->format('F'),
                 'total' => $expenses->sum('amount'),
+                'categories' => $expenses
+                    ->groupBy(fn (Expense $expense) => $expense->category->name)
+                    ->map(fn (Collection $categoryExpenses, string $category) => [
+                        'category' => $category,
+                        'total' => $categoryExpenses->sum('amount'),
+                    ])
+                    ->sortByDesc('total')
+                    ->values(),
             ])
             ->values();
     }

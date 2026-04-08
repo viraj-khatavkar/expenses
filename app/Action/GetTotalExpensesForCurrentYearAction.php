@@ -2,19 +2,16 @@
 
 namespace App\Action;
 
-use Illuminate\Support\Facades\Date;
+use Carbon\Carbon;
 
 use function app;
 
 final readonly class GetTotalExpensesForCurrentYearAction
 {
-    public function handle()
+    public function handle(Carbon $startDate, Carbon $endDate)
     {
         return app(GetExpensesAction::class)
-            ->handle(
-                Date::today()->startOfYear(),
-                Date::today()->endOfYear()
-            )
+            ->handle($startDate, $endDate)
             ->sum('amount');
     }
 }
