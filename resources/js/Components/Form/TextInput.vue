@@ -24,6 +24,8 @@
 </template>
 
 <script setup lang="ts">
+import { generateId } from '@/utils/generateId';
+
 interface PropTypes {
     type?: string;
     label: string;
@@ -35,7 +37,7 @@ interface PropTypes {
 
 withDefaults(defineProps<PropTypes>(), {
     type: 'text',
-    id: `text-input-${crypto.randomUUID()}`,
+    id: generateId('text-input'),
 });
 
 const model = defineModel();

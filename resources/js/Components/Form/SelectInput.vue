@@ -27,6 +27,7 @@
 
 <script setup lang="ts">
 import { ChevronDownIcon } from '@heroicons/vue/16/solid';
+import { generateId } from '@/utils/generateId';
 
 const model = defineModel();
 
@@ -39,6 +40,6 @@ interface Props {
 }
 
 withDefaults(defineProps<Props>(), {
-    id: `select-input-${crypto.randomUUID()}`,
+    id: generateId('select-input'),
 });
 </script>
