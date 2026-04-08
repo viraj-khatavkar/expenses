@@ -17,7 +17,7 @@ final class CategoryController extends Controller
     public function index(): Response
     {
         return inertia('Categories/Index', [
-            'categories' => Category::all(),
+            'categories' => Category::orderBy('name')->get(),
         ]);
     }
 

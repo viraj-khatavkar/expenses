@@ -17,7 +17,7 @@ final class ExpenseController extends Controller
     public function create(): Response
     {
         return inertia('Expenses/Create', [
-            'categories' => Category::all(),
+            'categories' => Category::orderBy('name')->get(),
         ]);
     }
 
@@ -40,7 +40,7 @@ final class ExpenseController extends Controller
     {
         return inertia('Expenses/Edit', [
             'expense' => $expense,
-            'categories' => Category::all(),
+            'categories' => Category::orderBy('name')->get(),
         ]);
     }
 
