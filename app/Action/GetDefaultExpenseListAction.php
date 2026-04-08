@@ -2,7 +2,6 @@
 
 namespace App\Action;
 
-use Carbon\Carbon;
 use Illuminate\Support\Facades\Date;
 
 use function app;
@@ -19,19 +18,19 @@ final readonly class GetDefaultExpenseListAction
             ->orderByDesc('date')
             ->with('category')
             ->get()
-            ->groupBy('date')
-            ->mapWithKeys(function ($expense, $date) {
-                $date = new Carbon($date);
+            ->groupBy(fn ($expense) => Date::parse($expense->date)->format('Y-m-d'))
+            ->mapWithKeys(function ($expenses, $dateStr) {
+                $date = Date::parse($dateStr);
 
-                if ($date->eq(Date::today())) {
-                    return ['Today' => $expense];
+                if ($date->isToday()) {
+                    return ['Today' => $expenses];
                 }
 
-                if ($date->eq(Date::yesterday())) {
-                    return ['Yesterday' => $expense];
+                if ($date->isYesterday()) {
+                    return ['Yesterday' => $expenses];
                 }
 
-                return [$date->copy()->format('D, d F') => $expense];
+                return [$date->format('D, d F') => $expenses];
             });
     }
 }
