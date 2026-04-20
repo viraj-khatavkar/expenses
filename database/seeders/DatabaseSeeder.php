@@ -4,6 +4,8 @@ namespace Database\Seeders;
 
 use App\Models\Category;
 use App\Models\Expense;
+use App\Models\Income;
+use App\Models\Source;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -41,5 +43,19 @@ class DatabaseSeeder extends Seeder
         }
 
         Expense::factory()->count(100)->create();
+
+        $sources = [
+            'Salary',
+            'Freelance',
+            'Investments',
+            'Bonus',
+            'Interest',
+        ];
+
+        foreach ($sources as $source) {
+            Source::factory()->create(['name' => $source]);
+        }
+
+        Income::factory()->count(20)->create();
     }
 }

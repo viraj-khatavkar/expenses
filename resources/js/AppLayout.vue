@@ -110,7 +110,7 @@
 
                     <Link
                         data-test="add-expense-button"
-                        href="/expenses/create"
+                        :href="fabHref"
                         class="fixed right-[max(2rem,calc((100vw-80rem)/2+2rem))] bottom-8 h-14 w-14 justify-around rounded-full bg-indigo-600 p-4 text-center text-white hover:bg-indigo-500"
                     >
                         <PlusIcon />
@@ -137,10 +137,16 @@ const navigation = computed(() => {
         { name: 'Home', href: '/', current: page.url === '/' },
         { name: 'Categories', href: '/categories', current: page.url.startsWith('/categories') },
         { name: 'Expenses', href: '/expenses', current: page.url.startsWith('/expenses') },
+        { name: 'Sources', href: '/sources', current: page.url.startsWith('/sources') },
+        { name: 'Income', href: '/income', current: page.url.startsWith('/income') },
         { name: 'Subscriptions', href: '/subscriptions', current: page.url.startsWith('/subscriptions') },
         { name: 'Reports', href: '/reports', current: page.url.startsWith('/reports') },
     ];
 });
+
+const fabHref = computed(() =>
+    page.url.startsWith('/income') ? '/income/create' : '/expenses/create',
+);
 
 const userNavigation = [{ name: 'Sign out', href: '/logout' }];
 </script>
