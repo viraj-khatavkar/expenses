@@ -1,107 +1,243 @@
 <template>
     <Head title="Expenses Tracker" />
-    <div class="min-h-full">
-        <Disclosure
-            as="nav"
-            class="border-b border-gray-200 bg-white dark:border-white/10 dark:bg-gray-900"
-            v-slot="{ open }"
-        >
-            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                <div class="flex h-16 justify-between">
-                    <div class="flex">
-                        <div class="flex shrink-0 items-center">Expenses Tracker</div>
-                        <div class="hidden sm:-my-px sm:ml-6 sm:flex sm:space-x-8">
-                            <Link
-                                v-for="item in navigation"
-                                :key="item.name"
-                                :href="item.href"
-                                :class="[
-                                    item.current
-                                        ? 'border-indigo-600 text-gray-900 dark:border-indigo-500 dark:text-white'
-                                        : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:border-white/20 dark:hover:text-gray-200',
-                                    'inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium',
-                                ]"
-                                :aria-current="item.current ? 'page' : undefined"
+    <div>
+        <TransitionRoot as="template" :show="sidebarOpen">
+            <Dialog class="relative z-50 lg:hidden" @close="sidebarOpen = false">
+                <TransitionChild
+                    as="template"
+                    enter="transition-opacity ease-linear duration-300"
+                    enter-from="opacity-0"
+                    enter-to="opacity-100"
+                    leave="transition-opacity ease-linear duration-300"
+                    leave-from="opacity-100"
+                    leave-to="opacity-0"
+                >
+                    <div class="fixed inset-0 bg-gray-900/80" />
+                </TransitionChild>
+
+                <div class="fixed inset-0 flex">
+                    <TransitionChild
+                        as="template"
+                        enter="transition ease-in-out duration-300 transform"
+                        enter-from="-translate-x-full"
+                        enter-to="translate-x-0"
+                        leave="transition ease-in-out duration-300 transform"
+                        leave-from="translate-x-0"
+                        leave-to="-translate-x-full"
+                    >
+                        <DialogPanel class="relative mr-16 flex w-full max-w-xs flex-1">
+                            <TransitionChild
+                                as="template"
+                                enter="ease-in-out duration-300"
+                                enter-from="opacity-0"
+                                enter-to="opacity-100"
+                                leave="ease-in-out duration-300"
+                                leave-from="opacity-100"
+                                leave-to="opacity-0"
                             >
-                                {{ item.name }}
-                            </Link>
+                                <div class="absolute top-0 left-full flex w-16 justify-center pt-5">
+                                    <button
+                                        type="button"
+                                        class="-m-2.5 cursor-pointer p-2.5"
+                                        @click="sidebarOpen = false"
+                                    >
+                                        <span class="sr-only">Close sidebar</span>
+                                        <XMarkIcon class="size-6 text-white" aria-hidden="true" />
+                                    </button>
+                                </div>
+                            </TransitionChild>
+
+                            <div
+                                class="flex grow flex-col gap-y-5 overflow-y-auto bg-white px-6 pb-4"
+                            >
+                                <div
+                                    class="flex h-16 shrink-0 items-center text-base font-semibold text-gray-900"
+                                >
+                                    Expenses Tracker
+                                </div>
+                                <nav class="flex flex-1 flex-col">
+                                    <ul role="list" class="flex flex-1 flex-col gap-y-7">
+                                        <li>
+                                            <ul role="list" class="-mx-2 space-y-1">
+                                                <li
+                                                    v-for="item in mainNavigation"
+                                                    :key="item.name"
+                                                >
+                                                    <Link
+                                                        :href="item.href"
+                                                        @click="sidebarOpen = false"
+                                                        :class="navLinkClasses(item.current)"
+                                                    >
+                                                        <component
+                                                            :is="item.icon"
+                                                            :class="navIconClasses(item.current)"
+                                                            aria-hidden="true"
+                                                        />
+                                                        {{ item.name }}
+                                                    </Link>
+                                                </li>
+                                            </ul>
+                                        </li>
+                                        <li>
+                                            <div
+                                                class="text-xs/6 font-semibold text-gray-400 uppercase"
+                                            >
+                                                Manage
+                                            </div>
+                                            <ul role="list" class="-mx-2 mt-2 space-y-1">
+                                                <li
+                                                    v-for="item in manageNavigation"
+                                                    :key="item.name"
+                                                >
+                                                    <Link
+                                                        :href="item.href"
+                                                        @click="sidebarOpen = false"
+                                                        :class="navLinkClasses(item.current)"
+                                                    >
+                                                        <component
+                                                            :is="item.icon"
+                                                            :class="navIconClasses(item.current)"
+                                                            aria-hidden="true"
+                                                        />
+                                                        {{ item.name }}
+                                                    </Link>
+                                                </li>
+                                            </ul>
+                                        </li>
+                                        <li class="-mx-2 mt-auto space-y-1 pt-4">
+                                            <Link
+                                                href="/account/password"
+                                                @click="sidebarOpen = false"
+                                                :class="
+                                                    navLinkClasses(
+                                                        page.url.startsWith('/account'),
+                                                    )
+                                                "
+                                            >
+                                                <KeyIcon
+                                                    :class="
+                                                        navIconClasses(
+                                                            page.url.startsWith('/account'),
+                                                        )
+                                                    "
+                                                    aria-hidden="true"
+                                                />
+                                                Change Password
+                                            </Link>
+                                            <Link
+                                                href="/logout"
+                                                method="post"
+                                                :class="navLinkClasses(false)"
+                                            >
+                                                <ArrowRightStartOnRectangleIcon
+                                                    :class="navIconClasses(false)"
+                                                    aria-hidden="true"
+                                                />
+                                                Sign Out
+                                            </Link>
+                                        </li>
+                                    </ul>
+                                </nav>
+                            </div>
+                        </DialogPanel>
+                    </TransitionChild>
+                </div>
+            </Dialog>
+        </TransitionRoot>
+
+        <div class="hidden lg:fixed lg:inset-y-0 lg:z-40 lg:flex lg:w-64 lg:flex-col">
+            <div
+                class="flex grow flex-col gap-y-5 overflow-y-auto border-r border-gray-200 bg-white px-6 pb-4"
+            >
+                <div
+                    class="flex h-16 shrink-0 items-center text-base font-semibold text-gray-900"
+                >
+                    Expenses Tracker
+                </div>
+                <nav class="flex flex-1 flex-col">
+                    <ul role="list" class="flex flex-1 flex-col gap-y-7">
+                        <li>
+                            <ul role="list" class="-mx-2 space-y-1">
+                                <li v-for="item in mainNavigation" :key="item.name">
+                                    <Link
+                                        :href="item.href"
+                                        :class="navLinkClasses(item.current)"
+                                    >
+                                        <component
+                                            :is="item.icon"
+                                            :class="navIconClasses(item.current)"
+                                            aria-hidden="true"
+                                        />
+                                        {{ item.name }}
+                                    </Link>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <div class="text-xs/6 font-semibold text-gray-400 uppercase">
+                                Manage
+                            </div>
+                            <ul role="list" class="-mx-2 mt-2 space-y-1">
+                                <li v-for="item in manageNavigation" :key="item.name">
+                                    <Link
+                                        :href="item.href"
+                                        :class="navLinkClasses(item.current)"
+                                    >
+                                        <component
+                                            :is="item.icon"
+                                            :class="navIconClasses(item.current)"
+                                            aria-hidden="true"
+                                        />
+                                        {{ item.name }}
+                                    </Link>
+                                </li>
+                            </ul>
+                        </li>
+                        <li class="-mx-2 mt-auto space-y-1 pt-4">
                             <Link
                                 href="/account/password"
-                                :class="[
-                                    page.url.startsWith('/account')
-                                        ? 'border-indigo-600 text-gray-900 dark:border-indigo-500 dark:text-white'
-                                        : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:border-white/20 dark:hover:text-gray-200',
-                                    'inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium',
-                                ]"
+                                :class="navLinkClasses(page.url.startsWith('/account'))"
                             >
+                                <KeyIcon
+                                    :class="navIconClasses(page.url.startsWith('/account'))"
+                                    aria-hidden="true"
+                                />
                                 Change Password
                             </Link>
                             <Link
                                 href="/logout"
                                 method="post"
-                                class="inline-flex cursor-pointer items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:border-white/20 dark:hover:text-gray-200"
+                                :class="navLinkClasses(false)"
                             >
+                                <ArrowRightStartOnRectangleIcon
+                                    :class="navIconClasses(false)"
+                                    aria-hidden="true"
+                                />
                                 Sign Out
                             </Link>
-                        </div>
-                    </div>
-                    <div class="-mr-2 flex items-center sm:hidden">
-                        <!-- Mobile menu button -->
-                        <DisclosureButton
-                            class="relative inline-flex items-center justify-center rounded-md bg-white p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500 focus:outline-2 focus:outline-offset-2 focus:outline-indigo-600 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white dark:focus:outline-indigo-500"
-                        >
-                            <span class="absolute -inset-0.5"></span>
-                            <span class="sr-only">Open main menu</span>
-                            <Bars3Icon v-if="!open" class="block size-6" aria-hidden="true" />
-                            <XMarkIcon v-else class="block size-6" aria-hidden="true" />
-                        </DisclosureButton>
-                    </div>
-                </div>
+                        </li>
+                    </ul>
+                </nav>
             </div>
+        </div>
 
-            <DisclosurePanel class="sm:hidden" v-slot="{ close }">
-                <div class="space-y-1 pt-2 pb-3">
-                    <Link
-                        v-for="item in navigation"
-                        :key="item.name"
-                        as="a"
-                        :href="item.href"
-                        @click="close"
-                        :class="[
-                            item.current
-                                ? 'border-indigo-600 bg-indigo-50 text-indigo-700 dark:border-indigo-500 dark:bg-indigo-600/10 dark:text-indigo-300'
-                                : 'border-transparent text-gray-600 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-800 dark:text-gray-400 dark:hover:border-gray-500 dark:hover:bg-white/5 dark:hover:text-gray-200',
-                            'block border-l-4 py-2 pr-4 pl-3 text-base font-medium',
-                        ]"
-                        :aria-current="item.current ? 'page' : undefined"
-                        >{{ item.name }}
-                    </Link>
-                    <Link
-                        href="/account/password"
-                        @click="close"
-                        :class="[
-                            page.url.startsWith('/account')
-                                ? 'border-indigo-600 bg-indigo-50 text-indigo-700 dark:border-indigo-500 dark:bg-indigo-600/10 dark:text-indigo-300'
-                                : 'border-transparent text-gray-600 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-800 dark:text-gray-400 dark:hover:border-gray-500 dark:hover:bg-white/5 dark:hover:text-gray-200',
-                            'block border-l-4 py-2 pr-4 pl-3 text-base font-medium',
-                        ]"
-                    >
-                        Change Password
-                    </Link>
-                    <Link
-                        href="/logout"
-                        method="post"
-                        class="block cursor-pointer border-l-4 border-transparent py-2 pr-4 pl-3 text-base font-medium text-gray-600 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-800 dark:text-gray-400 dark:hover:border-gray-500 dark:hover:bg-white/5 dark:hover:text-gray-200"
-                    >
-                        Sign Out
-                    </Link>
-                </div>
-            </DisclosurePanel>
-        </Disclosure>
+        <div
+            class="sticky top-0 z-30 flex items-center gap-x-6 border-b border-gray-200 bg-white px-4 py-4 shadow-xs sm:px-6 lg:hidden"
+        >
+            <button
+                type="button"
+                class="-m-2.5 cursor-pointer p-2.5 text-gray-700"
+                @click="sidebarOpen = true"
+            >
+                <span class="sr-only">Open sidebar</span>
+                <Bars3Icon class="size-6" aria-hidden="true" />
+            </button>
+            <div class="flex-1 text-sm font-semibold text-gray-900">Expenses Tracker</div>
+        </div>
 
-        <div class="lg:py-10">
-            <main>
-                <div class="relative mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <div class="lg:pl-64">
+            <main class="py-8 lg:py-10">
+                <div class="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <SuccessAlert v-if="$page.props.flash.success" class="mb-8">
                         {{ $page.props.flash.success }}
                     </SuccessAlert>
@@ -111,7 +247,7 @@
                     <Link
                         data-test="add-expense-button"
                         :href="fabHref"
-                        class="fixed right-[max(2rem,calc((100vw-80rem)/2+2rem))] bottom-8 h-14 w-14 justify-around rounded-full bg-indigo-600 p-4 text-center text-white hover:bg-indigo-500"
+                        class="fixed right-[max(2rem,calc((100vw-80rem)/2+2rem))] bottom-8 h-14 w-14 justify-around rounded-full bg-indigo-600 p-4 text-center text-white hover:bg-indigo-500 lg:right-[max(2rem,calc((100vw-96rem)/2+2rem))]"
                     >
                         <PlusIcon />
                     </Link>
@@ -122,31 +258,88 @@
 </template>
 
 <script setup lang="ts">
-import { User } from '@/types/app/Models/User';
-import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/vue';
-import { Bars3Icon, PlusIcon, XMarkIcon } from '@heroicons/vue/24/outline';
+import { Dialog, DialogPanel, TransitionChild, TransitionRoot } from '@headlessui/vue';
+import {
+    ArrowPathIcon,
+    ArrowRightStartOnRectangleIcon,
+    BanknotesIcon,
+    Bars3Icon,
+    ChartBarIcon,
+    CreditCardIcon,
+    HomeIcon,
+    InboxStackIcon,
+    KeyIcon,
+    PlusIcon,
+    TagIcon,
+    XMarkIcon,
+} from '@heroicons/vue/24/outline';
 import { Head, Link, usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import SuccessAlert from './Components/Alerts/SuccessAlert.vue';
 
 const page = usePage();
-const user: User = computed(() => page.props.auth.user);
+const sidebarOpen = ref(false);
 
-const navigation = computed(() => {
-    return [
-        { name: 'Home', href: '/', current: page.url === '/' },
-        { name: 'Categories', href: '/categories', current: page.url.startsWith('/categories') },
-        { name: 'Expenses', href: '/expenses', current: page.url.startsWith('/expenses') },
-        { name: 'Sources', href: '/sources', current: page.url.startsWith('/sources') },
-        { name: 'Income', href: '/income', current: page.url.startsWith('/income') },
-        { name: 'Subscriptions', href: '/subscriptions', current: page.url.startsWith('/subscriptions') },
-        { name: 'Reports', href: '/reports', current: page.url.startsWith('/reports') },
-    ];
-});
+const mainNavigation = computed(() => [
+    { name: 'Home', href: '/', icon: HomeIcon, current: page.url === '/' },
+    {
+        name: 'Expenses',
+        href: '/expenses',
+        icon: CreditCardIcon,
+        current: page.url.startsWith('/expenses'),
+    },
+    {
+        name: 'Income',
+        href: '/income',
+        icon: BanknotesIcon,
+        current: page.url.startsWith('/income'),
+    },
+    {
+        name: 'Subscriptions',
+        href: '/subscriptions',
+        icon: ArrowPathIcon,
+        current: page.url.startsWith('/subscriptions'),
+    },
+    {
+        name: 'Reports',
+        href: '/reports',
+        icon: ChartBarIcon,
+        current: page.url.startsWith('/reports'),
+    },
+]);
+
+const manageNavigation = computed(() => [
+    {
+        name: 'Categories',
+        href: '/categories',
+        icon: TagIcon,
+        current: page.url.startsWith('/categories'),
+    },
+    {
+        name: 'Sources',
+        href: '/sources',
+        icon: InboxStackIcon,
+        current: page.url.startsWith('/sources'),
+    },
+]);
 
 const fabHref = computed(() =>
     page.url.startsWith('/income') ? '/income/create' : '/expenses/create',
 );
 
-const userNavigation = [{ name: 'Sign out', href: '/logout' }];
+function navLinkClasses(current: boolean): string {
+    return [
+        current
+            ? 'bg-gray-50 text-indigo-600'
+            : 'text-gray-700 hover:bg-gray-50 hover:text-indigo-600',
+        'group flex items-center gap-x-3 rounded-md p-2 text-sm font-semibold',
+    ].join(' ');
+}
+
+function navIconClasses(current: boolean): string {
+    return [
+        current ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-600',
+        'size-6 shrink-0',
+    ].join(' ');
+}
 </script>
