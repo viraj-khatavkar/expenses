@@ -22,7 +22,7 @@
                     :error="errors.password_confirmation"
                 />
             </div>
-            <PrimaryButton type="submit" class="mt-6">Change Password</PrimaryButton>
+            <PrimaryButton type="submit" class="mt-6">Update Password</PrimaryButton>
         </Form>
     </div>
 </template>

@@ -36,7 +36,7 @@ it('can see correct total on index page', function ($amountOne, $amountTwo, $tot
     [345000, 150, '3,45,150'],
 ]);
 
-it('can add a new expense', function () {
+it('can add a new expense', function ($amount, $displayed) {
     $user = User::factory()->create();
     $category = Category::factory()->create();
 
@@ -44,31 +44,41 @@ it('can add a new expense', function () {
         ->navigate('/expenses')
         ->click('@add-expense-button')
         ->assertPathIs('/expenses/create')
-        ->type('amount', '1000')
+        ->type('amount', (string) $amount)
         ->select('category_id', $category->id)
         ->press('Add Expense')
         ->assertPathIs('/expenses')
-        ->assertSee('1,000')
+        ->assertSee($displayed)
         ->assertSee($category->name);
-});
+})->with([
+    [200, '₹200.00'],
+    [200.50, '₹200.50'],
+    [11389, '₹11,389.00'],
+    [11389.89, '₹11,389.89'],
+]);
 
-it('can edit an expense', function () {
+it('can edit an expense', function ($amount, $displayed) {
     $user = User::factory()->create();
-    $expense = Expense::factory()->create(['amount' => 100]);
+    $expense = Expense::factory()->create(['amount' => 99]);
 
     loginAs($user->email)
         ->navigate('/expenses')
-        ->assertSee('100')
+        ->assertSee('₹99.00')
         ->assertSee($expense->category->name)
         ->click($expense->category->name)
         ->assertPathIs('/expenses/'.$expense->id.'/edit')
-        ->type('amount', '1000')
+        ->type('amount', (string) $amount)
         ->press('Update')
         ->assertPathIs('/expenses')
         ->assertSee('Expense updated successfully.')
-        ->assertSee('1,000')
-        ->assertDontSee('100');
-});
+        ->assertSee($displayed)
+        ->assertDontSee('₹99.00');
+})->with([
+    [200, '₹200.00'],
+    [200.50, '₹200.50'],
+    [11389, '₹11,389.00'],
+    [11389.89, '₹11,389.89'],
+]);
 
 it('can delete an expense', function () {
     $user = User::factory()->create();

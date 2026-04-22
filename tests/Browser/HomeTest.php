@@ -54,7 +54,7 @@ it('shows correct total for april', function () {
     }
 
     loginAs($user->email)
-        ->assertSeeIn('#April', '2,42,567');
+        ->assertSeeIn('#April', '₹2.43L');
 });
 
 it('shows correct total for april and may', function () {
@@ -80,8 +80,8 @@ it('shows correct total for april and may', function () {
     }
 
     loginAs($user->email)
-        ->assertSeeIn('#April', '2,42,567')
-        ->assertSeeIn('#May', '3,23,482');
+        ->assertSeeIn('#April', '₹2.43L')
+        ->assertSeeIn('#May', '₹3.23L');
 });
 
 it('shows correct total for all twelve months of financial year', function () {
@@ -93,19 +93,19 @@ it('shows correct total for all twelve months of financial year', function () {
 
     $monthData = [
         // FY first half: April - December (same calendar year)
-        ['year' => $fyStartYear, 'month' => '04', 'maxDay' => 30, 'amounts' => [18392, 27451, 35780, 12945, 49332, 6814, 31609, 19876, 15204, 25164], 'name' => 'April', 'expected' => '2,42,567'],
-        ['year' => $fyStartYear, 'month' => '05', 'maxDay' => 31, 'amounts' => [43123, 55217, 23819, 87433, 17654, 64351, 12789, 19096], 'name' => 'May', 'expected' => '3,23,482'],
-        ['year' => $fyStartYear, 'month' => '06', 'maxDay' => 30, 'amounts' => [31257, 48291, 17943, 26517, 38951, 21439, 17563, 12410], 'name' => 'June', 'expected' => '2,14,371'],
-        ['year' => $fyStartYear, 'month' => '07', 'maxDay' => 31, 'amounts' => [55321, 42753, 36817, 21991, 71239, 49833, 15927, 4548], 'name' => 'July', 'expected' => '2,98,429'],
-        ['year' => $fyStartYear, 'month' => '08', 'maxDay' => 31, 'amounts' => [38119, 27451, 19837, 45673, 31992, 12789, 22987, 3598], 'name' => 'August', 'expected' => '2,02,446'],
-        ['year' => $fyStartYear, 'month' => '09', 'maxDay' => 30, 'amounts' => [73451, 55239, 41983, 61257, 38541, 27319, 52197, 216], 'name' => 'September', 'expected' => '3,50,203'],
-        ['year' => $fyStartYear, 'month' => '10', 'maxDay' => 31, 'amounts' => [19237, 26451, 31829, 17593, 28917, 33157, 12759, 4992], 'name' => 'October', 'expected' => '1,74,935'],
-        ['year' => $fyStartYear, 'month' => '11', 'maxDay' => 30, 'amounts' => [55064, 10671, 21006, 60082, 38945, 23391, 52316, 40832, 25945, 71718, 73681], 'name' => 'November', 'expected' => '4,73,651'],
-        ['year' => $fyStartYear, 'month' => '12', 'maxDay' => 31, 'amounts' => [67411, 53971, 11131, 14741, 44722, 68726, 51021, 28804, 15867, 48906, 78458, 27956], 'name' => 'December', 'expected' => '5,11,714'],
+        ['year' => $fyStartYear, 'month' => '04', 'maxDay' => 30, 'amounts' => [18392, 27451, 35780, 12945, 49332, 6814, 31609, 19876, 15204, 25164], 'name' => 'April', 'expected' => '₹2.43L'],
+        ['year' => $fyStartYear, 'month' => '05', 'maxDay' => 31, 'amounts' => [43123, 55217, 23819, 87433, 17654, 64351, 12789, 19096], 'name' => 'May', 'expected' => '₹3.23L'],
+        ['year' => $fyStartYear, 'month' => '06', 'maxDay' => 30, 'amounts' => [31257, 48291, 17943, 26517, 38951, 21439, 17563, 12410], 'name' => 'June', 'expected' => '₹2.14L'],
+        ['year' => $fyStartYear, 'month' => '07', 'maxDay' => 31, 'amounts' => [55321, 42753, 36817, 21991, 71239, 49833, 15927, 4548], 'name' => 'July', 'expected' => '₹2.98L'],
+        ['year' => $fyStartYear, 'month' => '08', 'maxDay' => 31, 'amounts' => [38119, 27451, 19837, 45673, 31992, 12789, 22987, 3598], 'name' => 'August', 'expected' => '₹2.02L'],
+        ['year' => $fyStartYear, 'month' => '09', 'maxDay' => 30, 'amounts' => [73451, 55239, 41983, 61257, 38541, 27319, 52197, 216], 'name' => 'September', 'expected' => '₹3.5L'],
+        ['year' => $fyStartYear, 'month' => '10', 'maxDay' => 31, 'amounts' => [19237, 26451, 31829, 17593, 28917, 33157, 12759, 4992], 'name' => 'October', 'expected' => '₹1.75L'],
+        ['year' => $fyStartYear, 'month' => '11', 'maxDay' => 30, 'amounts' => [55064, 10671, 21006, 60082, 38945, 23391, 52316, 40832, 25945, 71718, 73681], 'name' => 'November', 'expected' => '₹4.74L'],
+        ['year' => $fyStartYear, 'month' => '12', 'maxDay' => 31, 'amounts' => [67411, 53971, 11131, 14741, 44722, 68726, 51021, 28804, 15867, 48906, 78458, 27956], 'name' => 'December', 'expected' => '₹5.12L'],
         // FY second half: January - March (next calendar year)
-        ['year' => $fyEndYear, 'month' => '01', 'maxDay' => 31, 'amounts' => [40391, 25816, 76586, 56009, 66933, 60431, 38183, 14164, 11664], 'name' => 'January', 'expected' => '3,90,177'],
-        ['year' => $fyEndYear, 'month' => '02', 'maxDay' => 28, 'amounts' => [65029, 70461, 20856, 33419, 31714, 79136], 'name' => 'February', 'expected' => '3,00,615'],
-        ['year' => $fyEndYear, 'month' => '03', 'maxDay' => 31, 'amounts' => [55064, 10671, 21006, 60082, 38945, 23391, 52316, 40832, 25945, 71718, 73681], 'name' => 'March', 'expected' => '4,73,651'],
+        ['year' => $fyEndYear, 'month' => '01', 'maxDay' => 31, 'amounts' => [40391, 25816, 76586, 56009, 66933, 60431, 38183, 14164, 11664], 'name' => 'January', 'expected' => '₹3.9L'],
+        ['year' => $fyEndYear, 'month' => '02', 'maxDay' => 28, 'amounts' => [65029, 70461, 20856, 33419, 31714, 79136], 'name' => 'February', 'expected' => '₹3.01L'],
+        ['year' => $fyEndYear, 'month' => '03', 'maxDay' => 31, 'amounts' => [55064, 10671, 21006, 60082, 38945, 23391, 52316, 40832, 25945, 71718, 73681], 'name' => 'March', 'expected' => '₹4.74L'],
     ];
 
     foreach ($monthData as $m) {
@@ -148,9 +148,10 @@ it('shows correct category totals within months', function () {
     Expense::factory()->create(['date' => Date::parse("{$fyStartYear}-04-01")->subDay()->format('Y-m-d'), 'amount' => 99999, 'category_id' => $grocery->id]);
 
     loginAs($user->email)
-        ->assertSeeIn('#April', '9,500')
+        ->click('#April')
+        ->assertSeeIn('#April', '₹9.5K')
         ->assertSeeIn('#April', 'Grocery')
-        ->assertSeeIn('#April', '8,000')
+        ->assertSeeIn('#April', '₹8K')
         ->assertSeeIn('#April', 'Starbucks')
-        ->assertSeeIn('#April', '1,500');
+        ->assertSeeIn('#April', '₹1.5K');
 });
