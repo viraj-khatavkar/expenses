@@ -18,3 +18,9 @@ export interface FinancialYearOption {
     year: number;
     label: string;
 }
+
+export interface IncomeSourceTotal {
+    source: string;
+    total: number;
+    percentage: number;
+}

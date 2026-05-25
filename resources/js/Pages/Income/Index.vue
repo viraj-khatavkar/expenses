@@ -20,6 +20,48 @@
             </div>
         </div>
 
+        <div
+            v-if="sourceTotals.length > 0"
+            class="mb-4 rounded-xl bg-white shadow-sm ring-1 ring-gray-950/5 dark:bg-white/5 dark:ring-white/10"
+        >
+            <div class="border-b border-gray-950/5 px-5 py-4 dark:border-white/10">
+                <h2 class="text-sm font-semibold text-gray-900 dark:text-white">By Source</h2>
+            </div>
+            <ul class="divide-y divide-gray-950/5 dark:divide-white/10">
+                <li
+                    v-for="st in sourceTotals"
+                    :key="st.source"
+                    class="px-5 py-4"
+                >
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-500 dark:text-gray-400">
+                            {{ st.source }}
+                        </span>
+                        <span
+                            class="text-base font-semibold tabular-nums text-gray-900 dark:text-white"
+                        >
+                            {{ compactCurrencyFormatter(st.total) }}
+                        </span>
+                    </div>
+                    <div class="mt-2.5 flex items-center gap-3">
+                        <div
+                            class="h-1.5 flex-1 rounded-full bg-gray-100 dark:bg-white/10"
+                        >
+                            <div
+                                class="h-1.5 rounded-full bg-emerald-500 transition-all duration-300 dark:bg-emerald-400"
+                                :style="{ width: st.percentage + '%' }"
+                            ></div>
+                        </div>
+                        <span
+                            class="w-10 text-right text-xs tabular-nums text-gray-400 dark:text-gray-500"
+                        >
+                            {{ st.percentage.toFixed(0) }}%
+                        </span>
+                    </div>
+                </li>
+            </ul>
+        </div>
+
         <div v-if="incomes.length === 0" class="px-4 py-10 text-center text-sm text-gray-500 dark:text-gray-400">
             No income recorded for {{ fyLabel }}.
         </div>
@@ -34,7 +76,7 @@
                 </div>
                 <ul role="list" class="divide-y divide-gray-100 dark:divide-white/5">
                     <li v-for="income in group.incomes" :key="income.id" class="px-3 py-5">
-                        <Link :href="`/income/${income.id}/edit`">
+                        <Link :href="`/income/${income.id}/edit`" :data-testid="`income-${income.id}`">
                             <div class="flex justify-between tracking-wide">
                                 <div>
                                     <p class="text-sm/6 font-semibold text-gray-800 dark:text-white">
@@ -61,7 +103,8 @@
 
 <script setup lang="ts">
 import Stat from '@/Components/Stat.vue';
-import { FinancialYearOption, IncomeMonthGroup } from '@/types/app/Models/Income';
+import { FinancialYearOption, IncomeMonthGroup, IncomeSourceTotal } from '@/types/app/Models/Income';
+import compactCurrencyFormatter from '@/utils/compactCurrencyFormatter';
 import currencyFormatter from '@/utils/currencyFormatter';
 import { Link, router } from '@inertiajs/vue3';
 import dayjs from 'dayjs';
@@ -73,6 +116,7 @@ const props = defineProps<{
     availableFys: FinancialYearOption[];
     incomes: IncomeMonthGroup[];
     total: number;
+    sourceTotals: IncomeSourceTotal[];
 }>();
 
 const selectedFy = ref(props.fy);

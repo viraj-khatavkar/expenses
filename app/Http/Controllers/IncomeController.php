@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Action\GetAvailableIncomeFinancialYearsAction;
+use App\Action\GetIncomeBySourceForFinancialYearAction;
 use App\Action\GetIncomesForFinancialYearAction;
 use App\Action\GetTotalIncomeForFinancialYearAction;
 use App\Http\Requests\IncomeRequest;
@@ -35,6 +36,7 @@ final class IncomeController extends Controller
             'availableFys' => app(GetAvailableIncomeFinancialYearsAction::class)->handle($currentFyStart),
             'incomes' => app(GetIncomesForFinancialYearAction::class)->handle($fyStart, $fyEnd),
             'total' => app(GetTotalIncomeForFinancialYearAction::class)->handle($fyStart, $fyEnd),
+            'sourceTotals' => app(GetIncomeBySourceForFinancialYearAction::class)->handle($fyStart, $fyEnd),
         ]);
     }
 

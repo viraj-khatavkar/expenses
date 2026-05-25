@@ -76,7 +76,7 @@ it('can edit an income', function ($amount, $displayed) {
 
     loginAs($user->email)
         ->navigate('/income')
-        ->click('Salary')
+        ->click('@income-'.$income->id)
         ->assertPathIs('/income/'.$income->id.'/edit')
         ->type('amount', (string) $amount)
         ->press('Update')
