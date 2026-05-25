@@ -261,6 +261,7 @@
 import { Dialog, DialogPanel, TransitionChild, TransitionRoot } from '@headlessui/vue';
 import {
     ArrowPathIcon,
+    AdjustmentsHorizontalIcon,
     ArrowRightStartOnRectangleIcon,
     BanknotesIcon,
     Bars3Icon,
@@ -305,6 +306,12 @@ const mainNavigation = computed(() => [
         href: '/reports',
         icon: ChartBarIcon,
         current: page.url.startsWith('/reports'),
+    },
+    {
+        name: 'Explore',
+        href: '/explore',
+        icon: AdjustmentsHorizontalIcon,
+        current: page.url.startsWith('/explore'),
     },
 ]);
 
