@@ -79,6 +79,16 @@ it('can add a new expense', function ($amount, $displayed) {
     [11389.89, '₹11,389.89'],
 ]);
 
+it('uses a numeric amount field that accepts decimals', function () {
+    $user = User::factory()->create();
+
+    loginAs($user->email)
+        ->navigate('/expenses/create')
+        ->assertAttribute('[name=amount]', 'type', 'number')
+        ->assertAttribute('[name=amount]', 'step', '0.01')
+        ->assertAttribute('[name=amount]', 'inputmode', 'decimal');
+});
+
 it('can add an expense with a note', function () {
     $user = User::factory()->create();
     $category = Category::factory()->create(['name' => 'Shopping']);

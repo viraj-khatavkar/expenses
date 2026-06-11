@@ -105,14 +105,12 @@ it('shows validation errors for required fields on create', function () {
         ->assertSee('The amount field is required');
 });
 
-it('shows validation error for non-numeric amount on create', function () {
+it('blocks non-numeric amounts with a numeric input field', function () {
     $user = User::factory()->create();
 
     loginAs($user->email)
         ->navigate('/subscriptions/create')
-        ->type('title', 'Netflix')
-        ->type('amount', 'abc')
-        ->press('Add Subscription')
-        ->assertPathIs('/subscriptions/create')
-        ->assertSee('The amount field must be a number');
+        ->assertAttribute('[name=amount]', 'type', 'number')
+        ->assertAttribute('[name=amount]', 'step', '0.01')
+        ->assertAttribute('[name=amount]', 'inputmode', 'decimal');
 });

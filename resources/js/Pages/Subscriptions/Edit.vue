@@ -17,6 +17,8 @@
                     v-model="form.title"
                 />
                 <TextInput
+                    type="number"
+                    step="0.01"
                     name="amount"
                     label="Amount"
                     inputmode="decimal"

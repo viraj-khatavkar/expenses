@@ -8,6 +8,8 @@
             <div class="grid max-w-md grid-cols-1 gap-6">
                 <TextInput name="title" label="Title" :error="errors.title" />
                 <TextInput
+                    type="number"
+                    step="0.01"
                     name="amount"
                     label="Amount"
                     inputmode="decimal"
