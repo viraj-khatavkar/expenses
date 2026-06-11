@@ -17,9 +17,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/reports', ReportController::class);
     Route::get('/explore', ExploreController::class);
     Route::resource('/categories', CategoryController::class)->except('show', 'destroy');
-    Route::resource('/expenses', ExpenseController::class);
+    Route::resource('/expenses', ExpenseController::class)->except('show');
     Route::resource('/sources', SourceController::class)->except('show', 'destroy');
-    Route::resource('/income', IncomeController::class);
+    Route::resource('/income', IncomeController::class)->except('show');
     Route::resource('/subscriptions', SubscriptionController::class)->except('show');
     Route::get('/account/password', [PasswordController::class, 'edit'])->name('password.edit');
     Route::put('/account/password', [PasswordController::class, 'update'])->name('password.update');

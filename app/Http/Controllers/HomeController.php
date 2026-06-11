@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Action\GetExpensesGroupedByMonthForYear;
 use App\Action\GetTotalExpensesForCurrentYearAction;
+use App\Action\GetTotalIncomeForFinancialYearAction;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Date;
 
@@ -24,6 +25,7 @@ class HomeController extends Controller
         return inertia('Home', [
             'fyLabel' => $fyLabel,
             'thisYearTotal' => app(GetTotalExpensesForCurrentYearAction::class)->handle($fyStart, $fyEnd),
+            'thisYearIncome' => app(GetTotalIncomeForFinancialYearAction::class)->handle($fyStart, $fyEnd),
             'thisYearMonthlyTotals' => app(GetExpensesGroupedByMonthForYear::class)->handle($fyStart, $fyEnd),
         ]);
     }

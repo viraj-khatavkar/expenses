@@ -8,9 +8,12 @@
                 :type="type"
                 :name="name"
                 :id="id"
+                :inputmode="inputmode"
                 class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-gray-500 dark:focus:outline-indigo-500"
                 :placeholder="placeholder"
                 v-model="model"
+                :aria-invalid="error ? 'true' : undefined"
+                :aria-describedby="error ? `${name}-error` : undefined"
                 :class="{
                     'text-red-900 outline-red-300 placeholder:text-red-400 focus:outline-red-600':
                         error,
@@ -33,11 +36,12 @@ interface PropTypes {
     id?: string;
     placeholder?: string;
     error?: string;
+    inputmode?: 'text' | 'decimal' | 'numeric' | 'tel' | 'email' | 'url' | 'search';
 }
 
 withDefaults(defineProps<PropTypes>(), {
     type: 'text',
-    id: generateId('text-input'),
+    id: () => generateId('text-input'),
 });
 
 const model = defineModel();

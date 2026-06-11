@@ -10,8 +10,9 @@ final class ExpenseRequest extends FormRequest
     {
         return [
             'category_id' => ['required', 'exists:categories,id'],
-            'amount' => ['required', 'numeric'],
+            'amount' => ['required', 'numeric', 'min:0.01'],
             'date' => ['required', 'date'],
+            'note' => ['nullable', 'string', 'max:255'],
         ];
     }
 

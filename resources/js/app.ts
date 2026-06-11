@@ -6,6 +6,7 @@ import AppLayout from './AppLayout.vue';
 import './bootstrap';
 
 createInertiaApp({
+    title: (title) => (title ? `${title} · Expenses Tracker` : 'Expenses Tracker'),
     resolve: (name) => {
         const pages = import.meta.glob<DefineComponent>('./Pages/**/*.vue', { eager: true });
         let page = pages[`./Pages/${name}.vue`];

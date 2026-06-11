@@ -24,8 +24,8 @@ it('lists income for the current financial year by default', function () {
     loginAs($user->email)
         ->navigate('/income')
         ->assertSee('Salary')
-        ->assertSee('₹10,000.00')
-        ->assertDontSee('₹99,999.00');
+        ->assertSee('₹10,000')
+        ->assertDontSee('₹99,999');
 });
 
 it('filters income by the selected financial year via the url', function () {
@@ -42,7 +42,7 @@ it('filters income by the selected financial year via the url', function () {
         ->navigate('/income?fy=2024')
         ->assertSee('FY 2024-25')
         ->assertSee('Freelance')
-        ->assertSee('₹42,000.00');
+        ->assertSee('₹42,000');
 });
 
 it('can add a new income', function ($amount, $displayed) {
@@ -59,9 +59,9 @@ it('can add a new income', function ($amount, $displayed) {
         ->assertSee($displayed)
         ->assertSee('Bonus');
 })->with([
-    [5000, '₹5,000.00'],
+    [5000, '₹5,000'],
     [5000.50, '₹5,000.50'],
-    [75000, '₹75,000.00'],
+    [75000, '₹75,000'],
     [75000.89, '₹75,000.89'],
 ]);
 
@@ -83,13 +83,13 @@ it('can edit an income', function ($amount, $displayed) {
         ->assertPathIs('/income')
         ->assertSee('Income updated successfully.')
         ->assertSee($displayed)
-        ->assertDontSee('₹100.00');
+        ->assertDontSee('₹100');
 })->with([
-    [5000, '₹5,000.00'],
+    [5000, '₹5,000'],
     [5000.50, '₹5,000.50'],
 ]);
 
-it('can delete an income', function () {
+it('can delete an income after confirming', function () {
     $user = User::factory()->create();
     $source = Source::factory()->create(['name' => 'Salary']);
     $income = Income::factory()->create([
@@ -101,9 +101,10 @@ it('can delete an income', function () {
     loginAs($user->email)
         ->navigate('/income/'.$income->id.'/edit')
         ->press('Delete')
+        ->click('@confirm-delete')
         ->assertPathIs('/income')
         ->assertSee('Income deleted successfully.')
-        ->assertDontSee('₹100.00');
+        ->assertDontSee('₹100');
 });
 
 it('shows validation errors for creating a new income', function () {

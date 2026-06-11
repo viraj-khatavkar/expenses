@@ -18,7 +18,7 @@ it('shows categories with totals for the current financial year', function () {
         ->navigate('/explore')
         ->assertSee('Grocery')
         ->assertSee('Transport')
-        ->assertSee('₹10,000.00');
+        ->assertSee('₹10,000');
 });
 
 it('shows empty state when no expenses exist', function () {
@@ -51,9 +51,9 @@ it('updates total when toggling a category off', function () {
 
     loginAs($user->email)
         ->navigate('/explore')
-        ->assertSee('₹8,000.00')
+        ->assertSee('₹8,000')
         ->click('@category-'.$grocery->id)
-        ->assertSee('₹3,000.00')
+        ->assertSee('₹3,000')
         ->assertSee('1 of 2 categories');
 });
 
@@ -67,12 +67,12 @@ it('switches between include and exclude mode', function () {
 
     loginAs($user->email)
         ->navigate('/explore')
-        ->assertSee('₹8,000.00')
+        ->assertSee('₹8,000')
         ->click('@category-'.$grocery->id)
-        ->assertSee('₹3,000.00')
+        ->assertSee('₹3,000')
         ->assertSee('1 of 2 categories')
         ->click('Exclude')
-        ->assertSee('₹3,000.00')
+        ->assertSee('₹3,000')
         ->assertSee('1 of 2 categories');
 });
 
@@ -86,11 +86,11 @@ it('selects all and none categories', function () {
 
     loginAs($user->email)
         ->navigate('/explore')
-        ->assertSee('₹8,000.00')
+        ->assertSee('₹8,000')
         ->click('None')
-        ->assertSee('₹0.00')
+        ->assertSee('₹0')
         ->assertSee('No categories')
         ->click('All')
-        ->assertSee('₹8,000.00')
+        ->assertSee('₹8,000')
         ->assertSee('All categories');
 });

@@ -21,6 +21,7 @@ final readonly class GetExpensesGroupedByMonthForYear
             ->sortKeys()
             ->map(fn (Collection $expenses, string $month) => [
                 'month' => Date::parse($month)->format('F'),
+                'monthKey' => $month,
                 'total' => $expenses->sum('amount'),
                 'categories' => $expenses
                     ->groupBy(fn (Expense $expense) => $expense->category->name)

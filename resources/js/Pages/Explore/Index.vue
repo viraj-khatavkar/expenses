@@ -1,24 +1,25 @@
 <template>
-    <div>
-        <div class="mb-6 flex items-center justify-between">
-            <Stat>
-                <template #header>{{ fyLabel }}</template>
-                {{ currencyFormatter(computedTotal) }}
-            </Stat>
-            <div class="px-4 sm:px-6 lg:px-8">
-                <label for="fy-switcher" class="sr-only">Financial Year</label>
-                <select
-                    id="fy-switcher"
-                    v-model="selectedFy"
-                    @change="switchFy"
-                    class="rounded-md bg-white py-1.5 pr-8 pl-3 text-sm text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-indigo-600 dark:bg-white/5 dark:text-white dark:outline-white/10"
-                >
-                    <option v-for="option in availableFys" :key="option.year" :value="option.year">
-                        {{ option.label }}
-                    </option>
-                </select>
-            </div>
-        </div>
+    <div class="mx-auto max-w-3xl">
+        <Head title="Explore" />
+
+        <PageHeader title="Explore" subtitle="Add up any combination of categories.">
+            <label for="fy-switcher" class="sr-only">Financial Year</label>
+            <select
+                id="fy-switcher"
+                v-model="selectedFy"
+                @change="switchFy"
+                class="rounded-md bg-white py-1.5 pr-8 pl-3 text-sm text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-indigo-600 dark:bg-white/5 dark:text-white dark:outline-white/10"
+            >
+                <option v-for="option in availableFys" :key="option.year" :value="option.year">
+                    {{ option.label }}
+                </option>
+            </select>
+        </PageHeader>
+
+        <Stat class="mb-6">
+            <template #header>Selected total · {{ fyLabel }}</template>
+            {{ currencyFormatter(computedTotal) }}
+        </Stat>
 
         <div v-if="categoryTotals.length === 0" class="px-4 py-10 text-center text-sm text-gray-500 dark:text-gray-400">
             No expenses recorded for {{ fyLabel }}.
@@ -112,11 +113,12 @@
 </template>
 
 <script setup lang="ts">
+import PageHeader from '@/Components/PageHeader.vue';
 import Stat from '@/Components/Stat.vue';
 import { FinancialYearOption } from '@/types/app/Models/Income';
 import compactCurrencyFormatter from '@/utils/compactCurrencyFormatter';
 import currencyFormatter from '@/utils/currencyFormatter';
-import { router } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 
 interface CategoryTotal {

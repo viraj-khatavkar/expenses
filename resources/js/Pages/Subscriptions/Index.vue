@@ -1,5 +1,13 @@
 <template>
-    <div>
+    <div class="mx-auto max-w-3xl">
+        <Head title="Subscriptions" />
+
+        <PageHeader title="Subscriptions">
+            <Link href="/subscriptions/create">
+                <PrimaryButton>Add Subscription</PrimaryButton>
+            </Link>
+        </PageHeader>
+
         <!-- Analytics -->
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div
@@ -22,14 +30,7 @@
             </div>
         </div>
 
-        <!-- Add button + List -->
-        <div class="mt-8">
-            <div class="mb-5 flex justify-end">
-                <Link href="/subscriptions/create">
-                    <PrimaryButton>Add Subscription</PrimaryButton>
-                </Link>
-            </div>
-
+        <div class="mt-6">
             <div
                 v-if="subscriptions.length > 0"
                 class="rounded-xl bg-white shadow-sm ring-1 ring-gray-950/5 dark:bg-white/5 dark:ring-white/10"
@@ -73,7 +74,9 @@
 </template>
 
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
+import PageHeader from '@/Components/PageHeader.vue';
+import formatCurrencyAmount from '@/utils/formatCurrencyAmount';
+import { Head, Link } from '@inertiajs/vue3';
 import PrimaryButton from '../../Components/Button/PrimaryButton.vue';
 
 defineProps<{
@@ -91,8 +94,5 @@ defineProps<{
     }[];
 }>();
 
-function formatAmount(amount: number, currency: string): string {
-    const locale = currency === 'USD' ? 'en-US' : 'en-IN';
-    return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(amount);
-}
+const formatAmount = formatCurrencyAmount;
 </script>

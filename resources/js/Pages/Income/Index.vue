@@ -1,28 +1,29 @@
 <template>
-    <div>
-        <div class="mb-4 flex items-center justify-between">
-            <Stat>
-                <template #header>{{ fyLabel }}</template>
-                {{ currencyFormatter(total) }}
-            </Stat>
-            <div class="px-4 sm:px-6 lg:px-8">
-                <label for="fy-switcher" class="sr-only">Financial Year</label>
-                <select
-                    id="fy-switcher"
-                    v-model="selectedFy"
-                    @change="switchFy"
-                    class="rounded-md bg-white py-1.5 pr-8 pl-3 text-sm text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-indigo-600 dark:bg-white/5 dark:text-white dark:outline-white/10"
-                >
-                    <option v-for="option in availableFys" :key="option.year" :value="option.year">
-                        {{ option.label }}
-                    </option>
-                </select>
-            </div>
-        </div>
+    <div class="mx-auto max-w-3xl">
+        <Head title="Income" />
+
+        <PageHeader title="Income">
+            <label for="fy-switcher" class="sr-only">Financial Year</label>
+            <select
+                id="fy-switcher"
+                v-model="selectedFy"
+                @change="switchFy"
+                class="rounded-md bg-white py-1.5 pr-8 pl-3 text-sm text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-indigo-600 dark:bg-white/5 dark:text-white dark:outline-white/10"
+            >
+                <option v-for="option in availableFys" :key="option.year" :value="option.year">
+                    {{ option.label }}
+                </option>
+            </select>
+        </PageHeader>
+
+        <Stat>
+            <template #header>Received in {{ fyLabel }}</template>
+            {{ currencyFormatter(total) }}
+        </Stat>
 
         <div
             v-if="sourceTotals.length > 0"
-            class="mb-4 rounded-xl bg-white shadow-sm ring-1 ring-gray-950/5 dark:bg-white/5 dark:ring-white/10"
+            class="mt-6 rounded-xl bg-white shadow-sm ring-1 ring-gray-950/5 dark:bg-white/5 dark:ring-white/10"
         >
             <div class="border-b border-gray-950/5 px-5 py-4 dark:border-white/10">
                 <h2 class="text-sm font-semibold text-gray-900 dark:text-white">By Source</h2>
@@ -62,51 +63,67 @@
             </ul>
         </div>
 
-        <div v-if="incomes.length === 0" class="px-4 py-10 text-center text-sm text-gray-500 dark:text-gray-400">
-            No income recorded for {{ fyLabel }}.
+        <div
+            v-if="incomes.length === 0"
+            class="mt-6 rounded-xl bg-white px-6 py-16 text-center shadow-sm ring-1 ring-gray-950/5 dark:bg-white/5 dark:ring-white/10"
+        >
+            <p class="text-sm text-gray-400 dark:text-gray-500">
+                No income recorded for {{ fyLabel }}.
+            </p>
         </div>
 
-        <div v-else class="h-full overflow-y-auto" aria-label="Directory">
-            <div v-for="group in incomes" :key="group.month" class="relative">
+        <div
+            v-else
+            class="mt-6 overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-gray-950/5 dark:bg-white/5 dark:ring-white/10"
+        >
+            <div v-for="group in incomes" :key="group.month">
                 <div
-                    class="flex justify-between border-y border-t-gray-100 border-b-gray-200 bg-gray-50 px-3 py-1.5 text-sm/6 font-semibold text-gray-500 dark:border-t-white/5 dark:border-b-white/10 dark:bg-gray-900 dark:text-white dark:before:pointer-events-none dark:before:absolute dark:before:inset-0 dark:before:bg-white/5"
+                    class="flex items-center justify-between border-y border-t-gray-100 border-b-gray-200 bg-gray-50 px-5 py-1.5 dark:border-t-white/5 dark:border-b-white/10 dark:bg-gray-900"
                 >
-                    <h3 class="relative">{{ group.month }}</h3>
-                    <span class="relative">{{ currencyFormatter(group.total) }}</span>
+                    <h3 class="text-sm/6 font-semibold text-gray-500 dark:text-white">
+                        {{ group.month }}
+                    </h3>
+                    <span
+                        class="text-sm/6 font-semibold tabular-nums text-gray-500 dark:text-gray-400"
+                    >
+                        {{ currencyFormatter(group.total) }}
+                    </span>
                 </div>
                 <ul role="list" class="divide-y divide-gray-100 dark:divide-white/5">
-                    <li v-for="income in group.incomes" :key="income.id" class="px-3 py-5">
-                        <Link :href="`/income/${income.id}/edit`" :data-testid="`income-${income.id}`">
-                            <div class="flex justify-between tracking-wide">
-                                <div>
-                                    <p class="text-sm/6 font-semibold text-gray-800 dark:text-white">
-                                        {{ income.source.name }}
-                                    </p>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400">
-                                        {{ formatDate(income.date) }}
-                                    </p>
-                                </div>
-                                <p
-                                    class="lg:text-md text-sm/6 font-semibold text-gray-900 dark:text-white"
-                                >
-                                    {{ currencyFormatter(income.amount) }}
+                    <li v-for="income in group.incomes" :key="income.id">
+                        <Link
+                            :href="`/income/${income.id}/edit`"
+                            :data-testid="`income-${income.id}`"
+                            class="flex items-center justify-between gap-4 px-5 py-4 transition-colors hover:bg-gray-50 dark:hover:bg-white/5"
+                        >
+                            <div class="min-w-0">
+                                <p class="text-sm/6 font-semibold text-gray-800 dark:text-white">
+                                    {{ income.source.name }}
+                                </p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">
+                                    {{ formatDate(income.date) }}
                                 </p>
                             </div>
+                            <p
+                                class="shrink-0 text-sm/6 font-semibold tabular-nums text-gray-900 dark:text-white"
+                            >
+                                {{ currencyFormatter(income.amount) }}
+                            </p>
                         </Link>
                     </li>
                 </ul>
             </div>
         </div>
-
     </div>
 </template>
 
 <script setup lang="ts">
+import PageHeader from '@/Components/PageHeader.vue';
 import Stat from '@/Components/Stat.vue';
 import { FinancialYearOption, IncomeMonthGroup, IncomeSourceTotal } from '@/types/app/Models/Income';
 import compactCurrencyFormatter from '@/utils/compactCurrencyFormatter';
 import currencyFormatter from '@/utils/currencyFormatter';
-import { Link, router } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import dayjs from 'dayjs';
 import { ref } from 'vue';
 

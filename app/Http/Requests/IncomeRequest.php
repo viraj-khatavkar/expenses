@@ -10,7 +10,7 @@ final class IncomeRequest extends FormRequest
     {
         return [
             'source_id' => ['required', 'exists:sources,id'],
-            'amount' => ['required', 'numeric'],
+            'amount' => ['required', 'numeric', 'min:0.01'],
             'date' => ['required', 'date'],
         ];
     }

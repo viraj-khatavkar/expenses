@@ -1,5 +1,4 @@
 <template>
-    <Head title="Expenses Tracker" />
     <div>
         <TransitionRoot as="template" :show="sidebarOpen">
             <Dialog class="relative z-50 lg:hidden" @close="sidebarOpen = false">
@@ -232,27 +231,31 @@
                 <span class="sr-only">Open sidebar</span>
                 <Bars3Icon class="size-6" aria-hidden="true" />
             </button>
-            <div class="flex-1 text-sm font-semibold text-gray-900">Expenses Tracker</div>
+            <div class="flex-1 text-sm font-semibold text-gray-900">
+                {{ currentSectionName }}
+            </div>
         </div>
 
         <div class="lg:pl-64">
-            <main class="py-8 lg:py-10">
+            <main class="py-8 pb-28 lg:py-10 lg:pb-28">
                 <div class="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <SuccessAlert v-if="$page.props.flash.success" class="mb-8">
                         {{ $page.props.flash.success }}
                     </SuccessAlert>
 
                     <slot />
-
-                    <Link
-                        data-test="add-expense-button"
-                        :href="fabHref"
-                        class="fixed right-[max(2rem,calc((100vw-80rem)/2+2rem))] bottom-8 h-14 w-14 justify-around rounded-full bg-indigo-600 p-4 text-center text-white hover:bg-indigo-500 lg:right-[max(2rem,calc((100vw-96rem)/2+2rem))]"
-                    >
-                        <PlusIcon />
-                    </Link>
                 </div>
             </main>
+
+            <Link
+                v-if="showFab"
+                data-test="add-expense-button"
+                :href="fab.href"
+                :aria-label="fab.label"
+                class="fixed right-5 bottom-5 z-40 flex size-14 items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 sm:right-8 sm:bottom-8"
+            >
+                <PlusIcon class="size-6" aria-hidden="true" />
+            </Link>
         </div>
     </div>
 </template>
@@ -274,7 +277,7 @@ import {
     TagIcon,
     XMarkIcon,
 } from '@heroicons/vue/24/outline';
-import { Head, Link, usePage } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import SuccessAlert from './Components/Alerts/SuccessAlert.vue';
 
@@ -330,9 +333,47 @@ const manageNavigation = computed(() => [
     },
 ]);
 
-const fabHref = computed(() =>
-    page.url.startsWith('/income') ? '/income/create' : '/expenses/create',
-);
+const currentSectionName = computed(() => {
+    const active = [...mainNavigation.value, ...manageNavigation.value].find(
+        (item) => item.current,
+    );
+
+    if (active) {
+        return active.name;
+    }
+
+    return page.url.startsWith('/account') ? 'Account' : 'Expenses Tracker';
+});
+
+const fab = computed(() => {
+    const url = page.url;
+
+    if (url.startsWith('/income')) {
+        return { href: '/income/create', label: 'Add income' };
+    }
+
+    if (url.startsWith('/subscriptions')) {
+        return { href: '/subscriptions/create', label: 'Add subscription' };
+    }
+
+    if (url.startsWith('/categories')) {
+        return { href: '/categories/create', label: 'Add category' };
+    }
+
+    if (url.startsWith('/sources')) {
+        return { href: '/sources/create', label: 'Add source' };
+    }
+
+    return { href: '/expenses/create', label: 'Add expense' };
+});
+
+const showFab = computed(() => {
+    const path = page.url.split('?')[0];
+
+    return (
+        !path.endsWith('/create') && !path.endsWith('/edit') && !path.startsWith('/account')
+    );
+});
 
 function navLinkClasses(current: boolean): string {
     return [

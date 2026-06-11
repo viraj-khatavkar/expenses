@@ -1,20 +1,49 @@
 <template>
     <div>
+        <Head title="Home" />
+
         <!-- Hero — FY Total -->
         <div
             id="yearly-stat"
             class="rounded-xl bg-gray-50 px-6 py-10 shadow-sm ring-1 ring-gray-950/5 sm:px-8 dark:bg-white/5 dark:ring-white/10"
         >
-            <p class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ fyLabel }}</p>
+            <p class="text-sm font-medium text-gray-500 dark:text-gray-400">
+                Spent in {{ fyLabel }}
+            </p>
             <p class="mt-3 text-4xl font-bold tracking-wide text-gray-900 sm:text-5xl dark:text-white">
                 {{ currencyFormatter(thisYearTotal) }}
+            </p>
+            <p
+                v-if="thisYearIncome > 0"
+                class="mt-4 text-sm text-gray-500 dark:text-gray-400"
+            >
+                Income
+                <span class="font-semibold text-gray-900 dark:text-white">
+                    {{ compactCurrencyFormatter(thisYearIncome) }}
+                </span>
+                <span class="mx-1.5 text-gray-300 dark:text-gray-600">·</span>
+                <template v-if="saved >= 0">
+                    Saved
+                    <span class="font-semibold text-emerald-600 dark:text-emerald-400">
+                        {{ compactCurrencyFormatter(saved) }}
+                    </span>
+                    <span class="text-gray-400 dark:text-gray-500">
+                        ({{ savedPercentage }}%)
+                    </span>
+                </template>
+                <template v-else>
+                    Overspent by
+                    <span class="font-semibold text-rose-500 dark:text-rose-400">
+                        {{ compactCurrencyFormatter(Math.abs(saved)) }}
+                    </span>
+                </template>
             </p>
         </div>
 
         <div class="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-5">
             <!-- Monthly — expandable rows -->
             <div
-                class="rounded-xl bg-white shadow-sm ring-1 ring-gray-950/5 lg:col-span-3 dark:bg-white/5 dark:ring-white/10"
+                class="rounded-xl bg-white shadow-sm ring-1 ring-gray-950/5 lg:col-span-3 lg:self-start dark:bg-white/5 dark:ring-white/10"
             >
                 <div class="border-b border-gray-950/5 px-5 py-4 dark:border-white/10">
                     <h2 class="text-sm font-semibold text-gray-900 dark:text-white">Monthly</h2>
@@ -69,6 +98,13 @@
                                     {{ compactCurrencyFormatter(cat.total) }}
                                 </span>
                             </div>
+                            <Link
+                                :href="`/expenses?month=${monthlyStat.monthKey}`"
+                                class="mt-1 inline-flex items-center gap-1 py-1 text-xs font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
+                            >
+                                View expenses
+                                <ArrowRightIcon class="size-3" aria-hidden="true" />
+                            </Link>
                         </div>
                     </div>
                 </div>
@@ -135,17 +171,27 @@
 <script setup lang="ts">
 import compactCurrencyFormatter from '@/utils/compactCurrencyFormatter';
 import currencyFormatter from '@/utils/currencyFormatter';
+import { ArrowRightIcon } from '@heroicons/vue/16/solid';
+import { Head, Link } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 
 const props = defineProps<{
     fyLabel: string;
     thisYearTotal: number;
+    thisYearIncome: number;
     thisYearMonthlyTotals: {
         month: string;
+        monthKey: string;
         total: number;
         categories: { category: string; total: number }[];
     }[];
 }>();
+
+const saved = computed(() => props.thisYearIncome - props.thisYearTotal);
+
+const savedPercentage = computed(() =>
+    props.thisYearIncome > 0 ? Math.round((saved.value / props.thisYearIncome) * 100) : 0,
+);
 
 const expandedMonth = ref<string | null>(null);
 

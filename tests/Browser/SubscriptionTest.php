@@ -30,11 +30,11 @@ it('shows correct totals per currency', function () {
     loginAs($user->email)
         ->navigate('/subscriptions')
         ->assertSee('INR Subscriptions')
-        ->assertSee('₹900.00')
-        ->assertSee('₹10,800.00')
+        ->assertSee('₹900')
+        ->assertSee('₹10,800')
         ->assertSee('USD Subscriptions')
-        ->assertSee('$22.00')
-        ->assertSee('$264.00');
+        ->assertSee('$22')
+        ->assertSee('$264');
 });
 
 it('can add a new subscription', function () {
@@ -52,7 +52,7 @@ it('can add a new subscription', function () {
         ->assertPathIs('/subscriptions')
         ->assertSee('Subscription added successfully.')
         ->assertSee('Netflix')
-        ->assertSee('₹649.00');
+        ->assertSee('₹649');
 });
 
 it('can edit a subscription', function () {
@@ -77,17 +77,18 @@ it('can edit a subscription', function () {
         ->assertSee('Subscription updated successfully.')
         ->assertSee('New Title')
         ->assertSee('yearly')
-        ->assertSee('$999.00')
+        ->assertSee('$999')
         ->assertDontSee('Old Title');
 });
 
-it('can delete a subscription', function () {
+it('can delete a subscription after confirming', function () {
     $user = User::factory()->create();
     $subscription = Subscription::factory()->create(['title' => 'Cancel Me']);
 
     loginAs($user->email)
         ->navigate('/subscriptions/'.$subscription->id.'/edit')
         ->press('Delete')
+        ->click('@confirm-delete')
         ->assertPathIs('/subscriptions')
         ->assertSee('Subscription deleted successfully.')
         ->assertDontSee('Cancel Me');

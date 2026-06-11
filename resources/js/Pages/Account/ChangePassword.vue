@@ -1,7 +1,10 @@
 <template>
-    <div>
-        <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Change Password</h2>
-        <Form action="/account/password" method="put" class="mt-6" #default="{ errors }">
+    <div class="mx-auto max-w-3xl">
+        <Head title="Change Password" />
+
+        <PageHeader title="Change Password" />
+
+        <Form action="/account/password" method="put" #default="{ errors, processing }">
             <div class="grid max-w-md grid-cols-1 gap-6">
                 <TextInput
                     type="password"
@@ -22,13 +25,18 @@
                     :error="errors.password_confirmation"
                 />
             </div>
-            <PrimaryButton type="submit" class="mt-6">Update Password</PrimaryButton>
+            <div class="mt-8">
+                <PrimaryButton type="submit" :disabled="processing">
+                    Update Password
+                </PrimaryButton>
+            </div>
         </Form>
     </div>
 </template>
 
 <script setup lang="ts">
-import { Form } from '@inertiajs/vue3';
+import PageHeader from '@/Components/PageHeader.vue';
+import { Form, Head } from '@inertiajs/vue3';
 import PrimaryButton from '../../Components/Button/PrimaryButton.vue';
 import TextInput from '../../Components/Form/TextInput.vue';
 </script>

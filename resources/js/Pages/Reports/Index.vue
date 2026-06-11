@@ -1,588 +1,358 @@
 <template>
     <div class="mx-auto max-w-3xl">
-        <h1 class="text-xl font-bold text-gray-900 dark:text-white">
-            {{ fyLabel }}
-        </h1>
-        <p class="mt-1 text-sm text-gray-400 dark:text-gray-500">
-            Your spending story so far
-        </p>
+        <Head title="Reports" />
+
+        <PageHeader title="Reports" :subtitle="`Cashflow and trends for ${fyLabel}`">
+            <label for="fy-switcher" class="sr-only">Financial Year</label>
+            <select
+                id="fy-switcher"
+                v-model="selectedFy"
+                @change="switchFy"
+                class="rounded-md bg-white py-1.5 pr-8 pl-3 text-sm text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-indigo-600 dark:bg-white/5 dark:text-white dark:outline-white/10"
+            >
+                <option v-for="option in availableFys" :key="option.year" :value="option.year">
+                    {{ option.label }}
+                </option>
+            </select>
+        </PageHeader>
 
         <!-- Empty state -->
         <div
             v-if="empty"
-            class="mt-12 rounded-xl bg-white px-6 py-16 text-center shadow-sm ring-1 ring-gray-950/5 dark:bg-white/5 dark:ring-white/10"
+            class="rounded-xl bg-white px-6 py-16 text-center shadow-sm ring-1 ring-gray-950/5 dark:bg-white/5 dark:ring-white/10"
         >
             <p class="text-sm text-gray-400 dark:text-gray-500">
-                No expenses recorded yet. Start tracking to see your story
-                unfold.
+                Nothing recorded in {{ fyLabel }} yet.
             </p>
         </div>
 
         <template v-else>
-            <!-- The Anchor — your year in one glance -->
-            <div
-                class="mt-8 rounded-xl bg-gray-50 px-6 py-8 shadow-sm ring-1 ring-gray-950/5 sm:px-8 dark:bg-white/5 dark:ring-white/10"
-            >
-                <p
-                    class="text-sm leading-relaxed text-gray-500 dark:text-gray-400"
-                >
-                    Over
-                    <span class="font-medium text-gray-900 dark:text-white">
-                        {{ overview.monthCount }}
-                        {{ overview.monthCount === 1 ? 'month' : 'months' }}
-                    </span>
-                    you reached for your wallet
-                    <span class="font-medium text-gray-900 dark:text-white">
-                        {{
-                            overview.transactionCount.toLocaleString('en-IN')
-                        }}
-                        times </span
-                    >, spending a total of
-                </p>
-                <p
-                    class="mt-3 text-4xl font-bold tracking-wide text-gray-900 sm:text-5xl dark:text-white"
-                >
-                    {{ compactCurrencyFormatter(overview.total) }}
-                </p>
+            <!-- Cashflow summary -->
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <div
-                    class="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-500 dark:text-gray-400"
+                    class="rounded-xl bg-gray-50 px-5 py-5 shadow-sm ring-1 ring-gray-950/5 dark:bg-white/5 dark:ring-white/10"
                 >
-                    <span>
-                        <span
-                            class="font-medium text-gray-900 dark:text-white"
-                            >{{
-                                compactCurrencyFormatter(overview.avgMonthly)
-                            }}</span
-                        >
-                        /month
-                    </span>
-                    <span>
-                        <span
-                            class="font-medium text-gray-900 dark:text-white"
-                            >{{
-                                compactCurrencyFormatter(
-                                    overview.avgPerTransaction,
-                                )
-                            }}</span
-                        >
-                        /transaction avg
-                    </span>
-                    <span>
-                        Spent on
-                        <span
-                            class="font-medium text-gray-900 dark:text-white"
-                            >{{ overview.spendingDays }}</span
-                        >
-                        of {{ overview.totalDaysInRange }} days
-                    </span>
+                    <p class="text-xs font-medium text-gray-400 dark:text-gray-500">Income</p>
+                    <p
+                        class="mt-1 text-2xl font-bold tracking-wide text-gray-900 dark:text-white"
+                    >
+                        {{ compactCurrencyFormatter(cashflow!.income) }}
+                    </p>
                 </div>
-                <p
-                    class="mt-4 text-sm leading-relaxed text-gray-500 dark:text-gray-400"
+                <div
+                    class="rounded-xl bg-gray-50 px-5 py-5 shadow-sm ring-1 ring-gray-950/5 dark:bg-white/5 dark:ring-white/10"
                 >
-                    At this pace, you're on track to spend
-                    <span class="font-semibold text-gray-900 dark:text-white">
-                        {{
-                            compactCurrencyFormatter(overview.projectedYearly)
-                        }}
-                    </span>
-                    by March.
-                    <template v-if="overview.trend !== null">
-                        <span
-                            :class="
-                                overview.trend > 0
-                                    ? 'text-rose-500'
-                                    : 'text-emerald-600 dark:text-emerald-400'
-                            "
-                        >
-                            Your recent months are
-                            {{ overview.trend > 0 ? 'running' : 'trending' }}
-                            <span class="font-semibold"
-                                >{{ Math.abs(overview.trend) }}%
-                                {{
-                                    overview.trend > 0 ? 'higher' : 'lower'
-                                }}</span
-                            >
-                            than your earlier months.
-                        </span>
-                    </template>
-                </p>
+                    <p class="text-xs font-medium text-gray-400 dark:text-gray-500">Spent</p>
+                    <p
+                        class="mt-1 text-2xl font-bold tracking-wide text-gray-900 dark:text-white"
+                    >
+                        {{ compactCurrencyFormatter(cashflow!.spent) }}
+                    </p>
+                    <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">
+                        {{ compactCurrencyFormatter(cashflow!.avgMonthlySpend) }}/mo average
+                    </p>
+                </div>
+                <div
+                    class="rounded-xl bg-gray-50 px-5 py-5 shadow-sm ring-1 ring-gray-950/5 dark:bg-white/5 dark:ring-white/10"
+                >
+                    <p class="text-xs font-medium text-gray-400 dark:text-gray-500">
+                        {{ cashflow!.saved >= 0 ? 'Saved' : 'Overspent' }}
+                    </p>
+                    <p
+                        class="mt-1 text-2xl font-bold tracking-wide"
+                        :class="
+                            cashflow!.saved >= 0
+                                ? 'text-emerald-600 dark:text-emerald-400'
+                                : 'text-rose-500 dark:text-rose-400'
+                        "
+                    >
+                        {{ compactCurrencyFormatter(Math.abs(cashflow!.saved)) }}
+                    </p>
+                    <p
+                        v-if="cashflow!.savingsRate !== null"
+                        class="mt-1 text-xs text-gray-400 dark:text-gray-500"
+                    >
+                        {{ cashflow!.savingsRate }}% of income
+                    </p>
+                </div>
             </div>
 
-            <!-- Insights — deferred, loads after initial render -->
-            <Deferred data="insights">
-                <template #fallback>
-                    <div class="mt-8 space-y-5">
-                        <div
-                            v-for="i in 4"
-                            :key="i"
-                            class="h-24 animate-pulse rounded-xl bg-gray-100 dark:bg-white/5"
-                        ></div>
-                    </div>
-                </template>
-
-            <div class="mt-8 space-y-5">
-                <!-- Spike Month -->
-                <article
-                    v-if="insights.spikeMonth"
-                    class="rounded-xl bg-white px-6 py-5 shadow-sm ring-1 ring-gray-950/5 dark:bg-white/5 dark:ring-white/10"
+            <!-- Monthly cashflow -->
+            <div
+                class="mt-6 rounded-xl bg-white shadow-sm ring-1 ring-gray-950/5 dark:bg-white/5 dark:ring-white/10"
+            >
+                <div
+                    class="flex items-center justify-between border-b border-gray-950/5 px-5 py-4 dark:border-white/10"
                 >
-                    <div class="flex items-start gap-4">
-                        <div
-                            class="mt-0.5 h-8 w-1 shrink-0 rounded-full bg-rose-400"
-                        ></div>
-                        <div>
-                            <p
-                                class="text-sm font-semibold text-gray-900 dark:text-white"
-                            >
-                                {{ insights.spikeMonth.month }} broke your
-                                pattern
-                            </p>
-                            <p
-                                class="mt-1.5 text-sm leading-relaxed text-gray-500 dark:text-gray-400"
-                            >
-                                At
-                                <span
-                                    class="font-medium text-gray-900 dark:text-white"
-                                    >{{
-                                        compactCurrencyFormatter(
-                                            insights.spikeMonth.total,
-                                        )
-                                    }}</span
-                                >, it was
-                                <span
-                                    class="font-medium text-rose-500 dark:text-rose-400"
-                                    >{{ insights.spikeMonth.ratio }}x</span
-                                >
-                                your typical month. The biggest driver was
-                                <span
-                                    class="font-medium text-gray-900 dark:text-white"
-                                    >{{ insights.spikeMonth.driver }}</span
-                                >. Was this a planned spike or did it creep up
-                                on you?
-                            </p>
-                        </div>
+                    <h2 class="text-sm font-semibold text-gray-900 dark:text-white">
+                        Monthly cashflow
+                    </h2>
+                    <div
+                        class="flex items-center gap-4 text-xs text-gray-400 dark:text-gray-500"
+                    >
+                        <span class="flex items-center gap-1.5">
+                            <span class="size-2 rounded-full bg-emerald-400"></span>
+                            Income
+                        </span>
+                        <span class="flex items-center gap-1.5">
+                            <span class="size-2 rounded-full bg-indigo-400"></span>
+                            Spent
+                        </span>
                     </div>
-                </article>
-
-                <!-- Your Spending Rhythm -->
-                <article
-                    class="rounded-xl bg-white px-6 py-5 shadow-sm ring-1 ring-gray-950/5 dark:bg-white/5 dark:ring-white/10"
-                >
-                    <div class="flex items-start gap-4">
-                        <div
-                            class="mt-0.5 h-8 w-1 shrink-0 rounded-full bg-amber-400"
-                        ></div>
-                        <div class="flex-1">
-                            <p
-                                class="text-sm font-semibold text-gray-900 dark:text-white"
+                </div>
+                <ul class="divide-y divide-gray-950/5 dark:divide-white/10">
+                    <li
+                        v-for="month in visibleMonths"
+                        :key="month.monthKey"
+                        :data-testid="`cashflow-${month.monthKey}`"
+                        class="px-5 py-3"
+                    >
+                        <div class="flex items-center gap-4">
+                            <span
+                                class="w-8 shrink-0 text-xs font-medium"
+                                :class="
+                                    month.isCurrent
+                                        ? 'font-semibold text-gray-900 dark:text-white'
+                                        : 'text-gray-400 dark:text-gray-500'
+                                "
                             >
-                                Your spending rhythm
-                            </p>
-                            <p
-                                class="mt-1.5 text-sm leading-relaxed text-gray-500 dark:text-gray-400"
-                            >
-                                <template v-if="peakDay">
-                                    Your spending energy peaks on
-                                    <span
-                                        class="font-medium text-amber-600 dark:text-amber-400"
-                                        >{{ peakDayFull }}s</span
-                                    >.
-                                </template>
-                                <template
-                                    v-if="
-                                        insights.weekendAvg >
-                                        insights.weekdayAvg
-                                    "
-                                >
-                                    Each weekend transaction averages
-                                    <span
-                                        class="font-medium text-amber-600 dark:text-amber-400"
-                                        >{{
-                                            compactCurrencyFormatter(
-                                                insights.weekendAvg,
-                                            )
-                                        }}</span
-                                    >
-                                    vs
-                                    <span
-                                        class="font-medium text-gray-900 dark:text-white"
-                                        >{{
-                                            compactCurrencyFormatter(
-                                                insights.weekdayAvg,
-                                            )
-                                        }}</span
-                                    >
-                                    on weekdays — weekends loosen the purse
-                                    strings.
-                                </template>
-                            </p>
-                            <!-- Mini bar chart -->
-                            <div class="mt-4 flex items-end gap-1.5">
-                                <div
-                                    v-for="day in insights.spendingByDay"
-                                    :key="day.day"
-                                    class="flex flex-1 flex-col items-center gap-1"
-                                >
+                                {{ month.label }}
+                            </span>
+                            <div class="flex-1 space-y-1.5">
+                                <div class="h-1.5 rounded-full bg-gray-100 dark:bg-white/10">
                                     <div
-                                        class="w-full rounded-sm transition-all duration-300"
-                                        :class="
-                                            day.day === peakDay
-                                                ? 'bg-amber-400 dark:bg-amber-500'
-                                                : 'bg-gray-200 dark:bg-gray-700'
-                                        "
-                                        :style="{
-                                            height:
-                                                maxDayTotal > 0
-                                                    ? Math.max(
-                                                          4,
-                                                          (day.total /
-                                                              maxDayTotal) *
-                                                              48,
-                                                      ) + 'px'
-                                                    : '4px',
-                                        }"
+                                        class="h-1.5 rounded-full bg-emerald-400 transition-all duration-300 dark:bg-emerald-500"
+                                        :style="{ width: flowWidth(month.income) }"
                                     ></div>
-                                    <span
-                                        class="text-[10px]"
-                                        :class="
-                                            day.day === peakDay
-                                                ? 'font-semibold text-amber-600 dark:text-amber-400'
-                                                : 'text-gray-400 dark:text-gray-500'
-                                        "
-                                    >
-                                        {{ day.day }}
-                                    </span>
+                                </div>
+                                <div class="h-1.5 rounded-full bg-gray-100 dark:bg-white/10">
+                                    <div
+                                        class="h-1.5 rounded-full bg-indigo-400 transition-all duration-300 dark:bg-indigo-500"
+                                        :style="{ width: flowWidth(month.spent) }"
+                                    ></div>
                                 </div>
                             </div>
+                            <span
+                                class="w-16 shrink-0 text-right text-sm font-semibold tabular-nums text-gray-900 dark:text-white"
+                            >
+                                {{ compactCurrencyFormatter(month.spent) }}
+                            </span>
+                            <span
+                                class="w-16 shrink-0 text-right text-xs font-medium tabular-nums"
+                                :class="netClass(month)"
+                            >
+                                {{ netLabel(month) }}
+                            </span>
                         </div>
-                    </div>
-                </article>
-
-                <!-- Your Habit -->
-                <article
-                    class="rounded-xl bg-white px-6 py-5 shadow-sm ring-1 ring-gray-950/5 dark:bg-white/5 dark:ring-white/10"
-                >
-                    <div class="flex items-start gap-4">
-                        <div
-                            class="mt-0.5 h-8 w-1 shrink-0 rounded-full bg-indigo-400"
-                        ></div>
-                        <div>
-                            <p
-                                class="text-sm font-semibold text-gray-900 dark:text-white"
-                            >
-                                Your most consistent habit
-                            </p>
-                            <p
-                                class="mt-1.5 text-sm leading-relaxed text-gray-500 dark:text-gray-400"
-                            >
-                                You turned to
-                                <span
-                                    class="font-medium text-indigo-500 dark:text-indigo-400"
-                                    >{{ insights.topHabit.category }}</span
-                                >
-                                {{ ' ' }}
-                                <span
-                                    class="font-medium text-gray-900 dark:text-white"
-                                    >{{ insights.topHabit.count }} times</span
-                                >
-                                <template v-if="insights.topHabit.isRecurring">
-                                    — every single month </template
-                                >, averaging
-                                <span
-                                    class="font-medium text-gray-900 dark:text-white"
-                                    >{{
-                                        compactCurrencyFormatter(
-                                            insights.topHabit.avgPerVisit,
-                                        )
-                                    }}
-                                    each time</span
-                                >. If this continues unchanged, it'll cost
-                                <span
-                                    class="font-medium text-indigo-500 dark:text-indigo-400"
-                                    >{{
-                                        compactCurrencyFormatter(
-                                            insights.topHabit.projectedYearly,
-                                        )
-                                    }}</span
-                                >
-                                this year alone.
-                            </p>
-                        </div>
-                    </div>
-                </article>
-
-                <!-- The Small Purchase Effect -->
-                <article
-                    v-if="insights.smallPurchase"
-                    class="rounded-xl bg-white px-6 py-5 shadow-sm ring-1 ring-gray-950/5 dark:bg-white/5 dark:ring-white/10"
-                >
-                    <div class="flex items-start gap-4">
-                        <div
-                            class="mt-0.5 h-8 w-1 shrink-0 rounded-full bg-violet-400"
-                        ></div>
-                        <div>
-                            <p
-                                class="text-sm font-semibold text-gray-900 dark:text-white"
-                            >
-                                Death by a thousand small cuts
-                            </p>
-                            <p
-                                class="mt-1.5 text-sm leading-relaxed text-gray-500 dark:text-gray-400"
-                            >
-                                <span
-                                    class="font-medium text-violet-500 dark:text-violet-400"
-                                    >{{
-                                        insights.smallPurchase.count
-                                    }}
-                                    purchases</span
-                                >
-                                under ₹2,000 — roughly
-                                <span
-                                    class="font-medium text-gray-900 dark:text-white"
-                                    >{{
-                                        insights.smallPurchase.perWeek
-                                    }}
-                                    per week</span
-                                >
-                                — quietly added up to
-                                <span
-                                    class="font-medium text-violet-500 dark:text-violet-400"
-                                    >{{
-                                        compactCurrencyFormatter(
-                                            insights.smallPurchase.total,
-                                        )
-                                    }}</span
-                                >. That's
-                                <span
-                                    class="font-medium text-violet-500 dark:text-violet-400"
-                                    >{{ insights.smallPurchase.percent }}%</span
-                                >
-                                of your total spend, one small swipe at a time.
-                            </p>
-                        </div>
-                    </div>
-                </article>
-
-                <!-- Spending Gravity -->
-                <article
-                    v-if="insights.concentration.percent >= 60"
-                    class="rounded-xl bg-white px-6 py-5 shadow-sm ring-1 ring-gray-950/5 dark:bg-white/5 dark:ring-white/10"
-                >
-                    <div class="flex items-start gap-4">
-                        <div
-                            class="mt-0.5 h-8 w-1 shrink-0 rounded-full bg-emerald-400"
-                        ></div>
-                        <div>
-                            <p
-                                class="text-sm font-semibold text-gray-900 dark:text-white"
-                            >
-                                Your spending gravity
-                            </p>
-                            <p
-                                class="mt-1.5 text-sm leading-relaxed text-gray-500 dark:text-gray-400"
-                            >
-                                <span
-                                    class="font-medium text-emerald-600 dark:text-emerald-400"
-                                    >{{
-                                        insights.concentration.names.join(
-                                            ', ',
-                                        )
-                                    }}</span
-                                >
-                                — just
-                                {{
-                                    insights.concentration.names.length
-                                }}
-                                categories absorb
-                                <span
-                                    class="font-medium text-emerald-600 dark:text-emerald-400"
-                                    >{{
-                                        insights.concentration.percent
-                                    }}%</span
-                                >
-                                of everything.
-                                <template
-                                    v-if="
-                                        insights.concentration.remainingCount >
-                                        0
-                                    "
-                                >
-                                    The remaining
-                                    <span
-                                        class="font-medium text-gray-900 dark:text-white"
-                                        >{{
-                                            compactCurrencyFormatter(
-                                                insights.concentration
-                                                    .remainingTotal,
-                                            )
-                                        }}</span
-                                    >
-                                    is spread across
-                                    {{ insights.concentration.remainingCount }}
-                                    other categories.
-                                </template>
-                            </p>
-                        </div>
-                    </div>
-                </article>
-
-                <!-- Most Expensive Day -->
-                <article
-                    class="rounded-xl bg-white px-6 py-5 shadow-sm ring-1 ring-gray-950/5 dark:bg-white/5 dark:ring-white/10"
-                >
-                    <div class="flex items-start gap-4">
-                        <div
-                            class="mt-0.5 h-8 w-1 shrink-0 rounded-full bg-gray-400"
-                        ></div>
-                        <div>
-                            <p
-                                class="text-sm font-semibold text-gray-900 dark:text-white"
-                            >
-                                Your most expensive day
-                            </p>
-                            <p
-                                class="mt-1.5 text-sm leading-relaxed text-gray-500 dark:text-gray-400"
-                            >
-                                On
-                                <span
-                                    class="font-medium text-gray-900 dark:text-white"
-                                    >{{ insights.biggestDay.date }}</span
-                                >, you spent
-                                <span
-                                    class="font-medium text-gray-900 dark:text-white"
-                                    >{{
-                                        compactCurrencyFormatter(
-                                            insights.biggestDay.total,
-                                        )
-                                    }}</span
-                                >
-                                across
-                                {{ insights.biggestDay.count }}
-                                {{
-                                    insights.biggestDay.count === 1
-                                        ? 'transaction'
-                                        : 'transactions'
-                                }}
-                                <template
-                                    v-if="
-                                        insights.biggestDay.categories.length >
-                                        0
-                                    "
-                                >
-                                    in
-                                    {{
-                                        insights.biggestDay.categories.join(
-                                            ', ',
-                                        )
-                                    }}
-                                </template>
-                                <template
-                                    v-if="insights.biggestDay.multiple >= 2"
-                                >
-                                    — that's
-                                    <span
-                                        class="font-medium text-gray-900 dark:text-white"
-                                        >{{
-                                            insights.biggestDay.multiple
-                                        }}x</span
-                                    >
-                                    what you typically spend in a day.
-                                </template>
-                            </p>
-                        </div>
-                    </div>
-                </article>
+                    </li>
+                </ul>
             </div>
-            </Deferred>
+
+            <!-- Category trends -->
+            <div
+                v-if="categoryTrends!.length > 0"
+                class="mt-6 rounded-xl bg-white shadow-sm ring-1 ring-gray-950/5 dark:bg-white/5 dark:ring-white/10"
+            >
+                <div
+                    class="flex items-center justify-between border-b border-gray-950/5 px-5 py-4 dark:border-white/10"
+                >
+                    <h2 class="text-sm font-semibold text-gray-900 dark:text-white">
+                        Category trends
+                    </h2>
+                    <span class="text-xs text-gray-400 dark:text-gray-500">Apr → Mar</span>
+                </div>
+                <ul class="divide-y divide-gray-950/5 dark:divide-white/10">
+                    <li v-for="trend in categoryTrends" :key="trend.name" class="px-5 py-4">
+                        <div class="flex items-baseline justify-between gap-4">
+                            <p class="text-sm font-medium text-gray-900 dark:text-white">
+                                {{ trend.name }}
+                                <span class="ml-1 text-xs text-gray-400 dark:text-gray-500">
+                                    {{ trend.share }}%
+                                </span>
+                            </p>
+                            <p
+                                class="shrink-0 text-sm font-semibold tabular-nums text-gray-900 dark:text-white"
+                            >
+                                {{ compactCurrencyFormatter(trend.total) }}
+                            </p>
+                        </div>
+                        <div class="mt-2 flex items-end gap-4">
+                            <div class="flex h-9 flex-1 items-end gap-1">
+                                <div
+                                    v-for="(value, index) in trend.monthly"
+                                    :key="index"
+                                    class="flex-1 rounded-sm transition-all duration-300"
+                                    :class="
+                                        value > 0
+                                            ? index === currentMonthIndex
+                                                ? 'bg-indigo-500 dark:bg-indigo-400'
+                                                : 'bg-indigo-300 dark:bg-indigo-500/50'
+                                            : 'bg-gray-100 dark:bg-white/10'
+                                    "
+                                    :style="{ height: trendBarHeight(value, trend) }"
+                                    :title="`${monthLabels[index]}: ${compactCurrencyFormatter(value)}`"
+                                ></div>
+                            </div>
+                            <p class="shrink-0 text-xs text-gray-400 dark:text-gray-500">
+                                {{ compactCurrencyFormatter(trend.avgPerMonth) }}/mo
+                            </p>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Biggest expenses -->
+            <div
+                v-if="biggestExpenses!.length > 0"
+                class="mt-6 rounded-xl bg-white shadow-sm ring-1 ring-gray-950/5 dark:bg-white/5 dark:ring-white/10"
+            >
+                <div class="border-b border-gray-950/5 px-5 py-4 dark:border-white/10">
+                    <h2 class="text-sm font-semibold text-gray-900 dark:text-white">
+                        Biggest expenses
+                    </h2>
+                </div>
+                <ul class="divide-y divide-gray-950/5 dark:divide-white/10">
+                    <li v-for="expense in biggestExpenses" :key="expense.id">
+                        <Link
+                            :href="`/expenses/${expense.id}/edit`"
+                            class="flex items-center justify-between gap-4 px-5 py-3.5 transition-colors hover:bg-gray-50 dark:hover:bg-white/5"
+                        >
+                            <div class="min-w-0">
+                                <p class="truncate text-sm font-medium text-gray-900 dark:text-white">
+                                    {{ expense.category }}
+                                    <span
+                                        v-if="expense.note"
+                                        class="ml-1 font-normal text-gray-400 dark:text-gray-500"
+                                    >
+                                        · {{ expense.note }}
+                                    </span>
+                                </p>
+                                <p class="mt-0.5 text-xs text-gray-400 dark:text-gray-500">
+                                    {{ expense.date }}
+                                </p>
+                            </div>
+                            <p
+                                class="shrink-0 text-sm font-semibold tabular-nums text-gray-900 dark:text-white"
+                            >
+                                {{ currencyFormatter(expense.amount) }}
+                            </p>
+                        </Link>
+                    </li>
+                </ul>
+            </div>
         </template>
     </div>
 </template>
 
 <script setup lang="ts">
+import PageHeader from '@/Components/PageHeader.vue';
+import { FinancialYearOption } from '@/types/app/Models/Income';
 import compactCurrencyFormatter from '@/utils/compactCurrencyFormatter';
 import currencyFormatter from '@/utils/currencyFormatter';
-import { Deferred } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { Head, Link, router } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
+
+interface MonthCashflow {
+    monthKey: string;
+    label: string;
+    spent: number;
+    income: number;
+    net: number;
+    isCurrent: boolean;
+    isFuture: boolean;
+}
+
+interface CategoryTrend {
+    name: string;
+    total: number;
+    count: number;
+    share: number;
+    avgPerMonth: number;
+    monthly: number[];
+}
+
+interface BiggestExpense {
+    id: number;
+    date: string;
+    category: string;
+    note: string | null;
+    amount: number;
+}
 
 const props = defineProps<{
+    fy: number;
     fyLabel: string;
+    availableFys: FinancialYearOption[];
     empty: boolean;
-    overview?: {
-        total: number;
-        transactionCount: number;
-        monthCount: number;
-        avgMonthly: number;
-        projectedYearly: number;
-        avgPerTransaction: number;
-        spendingDays: number;
-        totalDaysInRange: number;
-        trend: number | null;
+    cashflow?: {
+        income: number;
+        spent: number;
+        saved: number;
+        savingsRate: number | null;
+        avgMonthlySpend: number;
     };
-    insights?: {
-        spikeMonth: {
-            month: string;
-            total: number;
-            ratio: number;
-            driver: string;
-        } | null;
-        spendingByDay: { day: string; total: number; count: number }[];
-        weekendPercent: number;
-        weekdayAvg: number;
-        weekendAvg: number;
-        topHabit: {
-            category: string;
-            count: number;
-            total: number;
-            avgPerVisit: number;
-            isRecurring: boolean;
-            projectedYearly: number;
-        };
-        smallPurchase: {
-            count: number;
-            total: number;
-            percent: number;
-            perWeek: number;
-        } | null;
-        concentration: {
-            names: string[];
-            percent: number;
-            remainingCount: number;
-            remainingTotal: number;
-        };
-        biggestDay: {
-            date: string;
-            total: number;
-            count: number;
-            categories: string[];
-            multiple: number;
-        };
-    };
+    monthly?: MonthCashflow[];
+    categoryTrends?: CategoryTrend[];
+    biggestExpenses?: BiggestExpense[];
 }>();
 
-const maxDayTotal = computed(() =>
-    Math.max(...(props.insights?.spendingByDay.map((d) => d.total) ?? [0]), 0),
-);
+const selectedFy = ref(props.fy);
 
-const peakDay = computed(() => {
-    const days = props.insights?.spendingByDay ?? [];
-    const peak = days.reduce(
-        (max, d) => (d.total > max.total ? d : max),
-        { day: '', total: 0 },
-    );
-    return peak.total > 0 ? peak.day : null;
-});
-
-const dayNames: Record<string, string> = {
-    Mon: 'Monday',
-    Tue: 'Tuesday',
-    Wed: 'Wednesday',
-    Thu: 'Thursday',
-    Fri: 'Friday',
-    Sat: 'Saturday',
-    Sun: 'Sunday',
+const switchFy = () => {
+    router.get('/reports', { fy: selectedFy.value }, { preserveScroll: true });
 };
 
-const peakDayFull = computed(() =>
-    peakDay.value ? dayNames[peakDay.value] : null,
+const visibleMonths = computed(() =>
+    (props.monthly ?? []).filter(
+        (month) => !month.isFuture || month.spent > 0 || month.income > 0,
+    ),
 );
+
+const monthLabels = computed(() => (props.monthly ?? []).map((month) => month.label));
+
+const currentMonthIndex = computed(() =>
+    (props.monthly ?? []).findIndex((month) => month.isCurrent),
+);
+
+const maxFlow = computed(() =>
+    Math.max(...visibleMonths.value.map((month) => Math.max(month.spent, month.income)), 1),
+);
+
+const flowWidth = (value: number) => {
+    if (value <= 0) {
+        return '0%';
+    }
+
+    return Math.max(2, Math.round((value / maxFlow.value) * 100)) + '%';
+};
+
+const trendBarHeight = (value: number, trend: CategoryTrend) => {
+    if (value <= 0) {
+        return '2px';
+    }
+
+    const max = Math.max(...trend.monthly, 1);
+
+    return Math.max(4, Math.round((value / max) * 36)) + 'px';
+};
+
+const netClass = (month: MonthCashflow) => {
+    if (month.spent === 0 && month.income === 0) {
+        return 'text-gray-300 dark:text-gray-600';
+    }
+
+    return month.net >= 0
+        ? 'text-emerald-600 dark:text-emerald-400'
+        : 'text-rose-500 dark:text-rose-400';
+};
+
+const netLabel = (month: MonthCashflow) => {
+    if (month.spent === 0 && month.income === 0) {
+        return '—';
+    }
+
+    const sign = month.net >= 0 ? '+' : '−';
+
+    return sign + compactCurrencyFormatter(Math.abs(month.net));
+};
 </script>
