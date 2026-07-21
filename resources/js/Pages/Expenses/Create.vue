@@ -35,6 +35,11 @@
                     placeholder="e.g. Groceries run"
                     :error="errors.note"
                 />
+                <CheckboxInput
+                    name="is_one_time"
+                    label="One-time expense"
+                    description="Kept out of regular spending stats"
+                />
             </div>
             <div class="mt-8">
                 <PrimaryButton type="submit" :disabled="processing">Add Expense</PrimaryButton>
@@ -49,6 +54,7 @@ import { Category } from '@/types/app/Models/Category';
 import { Form, Head } from '@inertiajs/vue3';
 import dayjs from 'dayjs';
 import PrimaryButton from '../../Components/Button/PrimaryButton.vue';
+import CheckboxInput from '../../Components/Form/CheckboxInput.vue';
 import SelectInput from '../../Components/Form/SelectInput.vue';
 import TextInput from '../../Components/Form/TextInput.vue';
 

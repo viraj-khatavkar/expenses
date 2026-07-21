@@ -48,7 +48,17 @@
                     >
                         {{ compactCurrencyFormatter(cashflow!.spent) }}
                     </p>
-                    <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">
+                    <template v-if="hasOneTime">
+                        <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">
+                            {{ compactCurrencyFormatter(cashflow!.regularSpent) }} regular ·
+                            {{ compactCurrencyFormatter(cashflow!.oneTimeSpent) }} one-time
+                        </p>
+                        <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">
+                            {{ compactCurrencyFormatter(cashflow!.avgMonthlyRegularSpend) }}/mo
+                            regular average
+                        </p>
+                    </template>
+                    <p v-else class="mt-1 text-xs text-gray-400 dark:text-gray-500">
                         {{ compactCurrencyFormatter(cashflow!.avgMonthlySpend) }}/mo average
                     </p>
                 </div>
@@ -56,24 +66,50 @@
                     class="rounded-xl bg-gray-50 px-5 py-5 shadow-sm ring-1 ring-gray-950/5 dark:bg-white/5 dark:ring-white/10"
                 >
                     <p class="text-xs font-medium text-gray-400 dark:text-gray-500">
-                        {{ cashflow!.saved >= 0 ? 'Saved' : 'Overspent' }}
+                        {{ cashflow!.saved >= 0 || noIncomeRecorded ? 'Saved' : 'Deficit' }}
                     </p>
-                    <p
-                        class="mt-1 text-2xl font-bold tracking-wide"
-                        :class="
-                            cashflow!.saved >= 0
-                                ? 'text-emerald-600 dark:text-emerald-400'
-                                : 'text-rose-500 dark:text-rose-400'
-                        "
-                    >
-                        {{ compactCurrencyFormatter(Math.abs(cashflow!.saved)) }}
-                    </p>
-                    <p
-                        v-if="cashflow!.savingsRate !== null"
-                        class="mt-1 text-xs text-gray-400 dark:text-gray-500"
-                    >
-                        {{ cashflow!.savingsRate }}% of income
-                    </p>
+                    <template v-if="noIncomeRecorded">
+                        <p
+                            class="mt-1 text-2xl font-bold tracking-wide text-gray-400 dark:text-gray-500"
+                        >
+                            —
+                        </p>
+                        <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">
+                            No income recorded this year
+                        </p>
+                    </template>
+                    <template v-else>
+                        <p
+                            class="mt-1 text-2xl font-bold tracking-wide"
+                            :class="
+                                cashflow!.saved >= 0
+                                    ? 'text-emerald-600 dark:text-emerald-400'
+                                    : 'text-amber-600 dark:text-amber-400'
+                            "
+                        >
+                            {{ compactCurrencyFormatter(Math.abs(cashflow!.saved)) }}
+                        </p>
+                        <p
+                            v-if="cashflow!.savingsRate !== null"
+                            class="mt-1 text-xs text-gray-400 dark:text-gray-500"
+                        >
+                            {{ cashflow!.savingsRate }}% of income
+                        </p>
+                        <p
+                            v-if="hasOneTime && cashflow!.coreSavingsRate !== null"
+                            class="mt-1 text-xs text-gray-400 dark:text-gray-500"
+                        >
+                            <template v-if="cashflow!.coreSaved >= 0">
+                                {{ compactCurrencyFormatter(cashflow!.coreSaved) }} saved ({{
+                                    cashflow!.coreSavingsRate
+                                }}%) excluding one-time
+                            </template>
+                            <template v-else>
+                                {{ compactCurrencyFormatter(Math.abs(cashflow!.coreSaved)) }}
+                                deficit excluding one-time
+                            </template>
+                        </p>
+                    </template>
                 </div>
             </div>
 
@@ -151,6 +187,7 @@
             <!-- Category trends -->
             <div
                 v-if="categoryTrends!.length > 0"
+                data-testid="category-trends"
                 class="mt-6 rounded-xl bg-white shadow-sm ring-1 ring-gray-950/5 dark:bg-white/5 dark:ring-white/10"
             >
                 <div
@@ -159,7 +196,9 @@
                     <h2 class="text-sm font-semibold text-gray-900 dark:text-white">
                         Category trends
                     </h2>
-                    <span class="text-xs text-gray-400 dark:text-gray-500">Apr → Mar</span>
+                    <span class="text-xs text-gray-400 dark:text-gray-500">
+                        <template v-if="hasOneTime">one-time excluded · </template>Apr → Mar
+                    </span>
                 </div>
                 <ul class="divide-y divide-gray-950/5 dark:divide-white/10">
                     <li v-for="trend in categoryTrends" :key="trend.name" class="px-5 py-4">
@@ -221,6 +260,12 @@
                                 <p class="truncate text-sm font-medium text-gray-900 dark:text-white">
                                     {{ expense.category }}
                                     <span
+                                        v-if="expense.isOneTime"
+                                        class="ml-1 inline-flex items-center rounded-md bg-amber-50 px-1.5 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-amber-600/20 ring-inset dark:bg-amber-400/10 dark:text-amber-400 dark:ring-amber-400/20"
+                                    >
+                                        one-time
+                                    </span>
+                                    <span
                                         v-if="expense.note"
                                         class="ml-1 font-normal text-gray-400 dark:text-gray-500"
                                     >
@@ -277,6 +322,7 @@ interface BiggestExpense {
     category: string;
     note: string | null;
     amount: number;
+    isOneTime: boolean;
 }
 
 const props = defineProps<{
@@ -290,11 +336,23 @@ const props = defineProps<{
         saved: number;
         savingsRate: number | null;
         avgMonthlySpend: number;
+        regularSpent: number;
+        oneTimeSpent: number;
+        oneTimeCount: number;
+        coreSaved: number;
+        coreSavingsRate: number | null;
+        avgMonthlyRegularSpend: number;
     };
     monthly?: MonthCashflow[];
     categoryTrends?: CategoryTrend[];
     biggestExpenses?: BiggestExpense[];
 }>();
+
+const hasOneTime = computed(() => (props.cashflow?.oneTimeSpent ?? 0) > 0);
+
+const noIncomeRecorded = computed(
+    () => props.cashflow !== undefined && props.cashflow.income === 0 && props.cashflow.spent > 0,
+);
 
 const selectedFy = ref(props.fy);
 

@@ -24,7 +24,7 @@ it('shows the cashflow summary for the financial year', function () {
         ->assertSee('60% of income');
 });
 
-it('shows overspending when expenses exceed income', function () {
+it('shows a deficit when expenses exceed income', function () {
     $user = User::factory()->create();
 
     Expense::factory()->create(['amount' => 50000, 'date' => Date::today()]);
@@ -32,8 +32,79 @@ it('shows overspending when expenses exceed income', function () {
 
     loginAs($user->email)
         ->navigate('/reports')
-        ->assertSee('Overspent')
+        ->assertSee('Deficit')
         ->assertSee('₹20K');
+});
+
+it('splits regular and one-time spending in the summary', function () {
+    $user = User::factory()->create();
+
+    Income::factory()->create(['amount' => 200000, 'date' => Date::today()]);
+    Expense::factory()->create(['amount' => 50000, 'date' => Date::today()]);
+    Expense::factory()->oneTime()->create(['amount' => 90000, 'date' => Date::today()]);
+
+    loginAs($user->email)
+        ->navigate('/reports')
+        ->assertSee('₹1.4L')
+        ->assertSee('₹50K regular')
+        ->assertSee('₹90K one-time')
+        ->assertSee('Saved')
+        ->assertSee('₹60K')
+        ->assertSee('30% of income')
+        ->assertSee('saved (75%) excluding one-time');
+});
+
+it('shows the core savings alongside a deficit caused by one-time spending', function () {
+    $user = User::factory()->create();
+
+    Income::factory()->create(['amount' => 100000, 'date' => Date::today()]);
+    Expense::factory()->create(['amount' => 55000, 'date' => Date::today()]);
+    Expense::factory()->oneTime()->create(['amount' => 75000, 'date' => Date::today()]);
+
+    loginAs($user->email)
+        ->navigate('/reports')
+        ->assertSee('Deficit')
+        ->assertSee('₹30K')
+        ->assertSee('-30% of income')
+        ->assertSee('₹45K saved (45%) excluding one-time');
+});
+
+it('excludes one-time expenses from category trends', function () {
+    $user = User::factory()->create();
+    $grocery = Category::factory()->create(['name' => 'Grocery']);
+    $hospital = Category::factory()->create(['name' => 'Hospital']);
+
+    Expense::factory()->count(3)->create([
+        'category_id' => $grocery->id,
+        'amount' => 1000,
+        'date' => Date::today(),
+    ]);
+    Expense::factory()->oneTime()->create([
+        'category_id' => $hospital->id,
+        'amount' => 100000,
+        'date' => Date::today(),
+    ]);
+
+    loginAs($user->email)
+        ->navigate('/reports')
+        ->assertSeeIn('[data-testid="category-trends"]', 'Grocery')
+        ->assertSeeIn('[data-testid="category-trends"]', '₹3K')
+        ->assertSeeIn('[data-testid="category-trends"]', 'one-time excluded')
+        ->assertDontSeeIn('[data-testid="category-trends"]', 'Hospital')
+        ->assertSee('Biggest expenses')
+        ->assertSee('Hospital');
+});
+
+it('shows no income recorded instead of a deficit for a year with only expenses', function () {
+    $user = User::factory()->create();
+
+    Expense::factory()->create(['amount' => 50000, 'date' => Date::today()]);
+
+    loginAs($user->email)
+        ->navigate('/reports')
+        ->assertSee('₹50K')
+        ->assertSee('No income recorded this year')
+        ->assertDontSee('Deficit');
 });
 
 it('shows monthly cashflow rows', function () {

@@ -13,7 +13,16 @@ final class ExpenseRequest extends FormRequest
             'amount' => ['required', 'numeric', 'min:0.01'],
             'date' => ['required', 'date'],
             'note' => ['nullable', 'string', 'max:255'],
+            'is_one_time' => ['required', 'boolean'],
         ];
+    }
+
+    /**
+     * An unchecked checkbox is absent from the request, so default it to false.
+     */
+    protected function prepareForValidation(): void
+    {
+        $this->mergeIfMissing(['is_one_time' => false]);
     }
 
     public function messages(): array

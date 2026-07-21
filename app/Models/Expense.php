@@ -20,6 +20,7 @@ class Expense extends Model
     {
         return [
             'date' => 'date:Y-m-d',
+            'is_one_time' => 'boolean',
         ];
     }
 }

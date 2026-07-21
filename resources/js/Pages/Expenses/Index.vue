@@ -76,6 +76,12 @@
                                     class="text-sm/6 font-semibold text-gray-800 dark:text-white"
                                 >
                                     {{ expense.category.name }}
+                                    <span
+                                        v-if="expense.is_one_time"
+                                        class="ml-1 inline-flex items-center rounded-md bg-amber-50 px-1.5 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-amber-600/20 ring-inset dark:bg-amber-400/10 dark:text-amber-400 dark:ring-amber-400/20"
+                                    >
+                                        one-time
+                                    </span>
                                 </p>
                                 <p
                                     v-if="expense.note"

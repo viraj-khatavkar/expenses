@@ -32,9 +32,27 @@
                     </span>
                 </template>
                 <template v-else>
-                    Overspent by
-                    <span class="font-semibold text-rose-500 dark:text-rose-400">
+                    Deficit
+                    <span class="font-semibold text-amber-600 dark:text-amber-400">
                         {{ compactCurrencyFormatter(Math.abs(saved)) }}
+                    </span>
+                </template>
+                <template v-if="thisYearOneTimeTotal > 0">
+                    <span class="mx-1.5 text-gray-300 dark:text-gray-600">·</span>
+                    Excluding one-time:
+                    <span
+                        class="font-semibold"
+                        :class="
+                            coreSaved >= 0
+                                ? 'text-emerald-600 dark:text-emerald-400'
+                                : 'text-amber-600 dark:text-amber-400'
+                        "
+                    >
+                        {{ coreSaved >= 0 ? 'saved' : 'deficit' }}
+                        {{ compactCurrencyFormatter(Math.abs(coreSaved)) }}
+                    </span>
+                    <span v-if="coreSaved >= 0" class="text-gray-400 dark:text-gray-500">
+                        ({{ coreSavedPercentage }}%)
                     </span>
                 </template>
             </p>
@@ -179,6 +197,7 @@ const props = defineProps<{
     fyLabel: string;
     thisYearTotal: number;
     thisYearIncome: number;
+    thisYearOneTimeTotal: number;
     thisYearMonthlyTotals: {
         month: string;
         monthKey: string;
@@ -191,6 +210,12 @@ const saved = computed(() => props.thisYearIncome - props.thisYearTotal);
 
 const savedPercentage = computed(() =>
     props.thisYearIncome > 0 ? Math.round((saved.value / props.thisYearIncome) * 100) : 0,
+);
+
+const coreSaved = computed(() => saved.value + props.thisYearOneTimeTotal);
+
+const coreSavedPercentage = computed(() =>
+    props.thisYearIncome > 0 ? Math.round((coreSaved.value / props.thisYearIncome) * 100) : 0,
 );
 
 const expandedMonth = ref<string | null>(null);

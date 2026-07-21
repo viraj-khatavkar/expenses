@@ -2,6 +2,7 @@
 
 use App\Models\Category;
 use App\Models\Expense;
+use App\Models\Income;
 use App\Models\User;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Str;
@@ -128,6 +129,19 @@ it('shows correct total for all twelve months of financial year', function () {
     foreach ($monthData as $m) {
         $browser->assertSeeIn("#{$m['name']}", $m['expected']);
     }
+});
+
+it('shows the deficit and core savings in the hero when one-time expenses exist', function () {
+    $user = User::factory()->create();
+
+    Income::factory()->create(['amount' => 100000, 'date' => Date::today()]);
+    Expense::factory()->create(['amount' => 55000, 'date' => Date::today()]);
+    Expense::factory()->oneTime()->create(['amount' => 75000, 'date' => Date::today()]);
+
+    loginAs($user->email)
+        ->assertSeeIn('#yearly-stat', 'Deficit')
+        ->assertSeeIn('#yearly-stat', '₹30K')
+        ->assertSeeIn('#yearly-stat', 'Excluding one-time: saved ₹45K (45%)');
 });
 
 it('shows correct category totals within months', function () {

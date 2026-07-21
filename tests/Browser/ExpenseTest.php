@@ -172,6 +172,39 @@ it('keeps the expense when the delete confirmation is cancelled', function () {
     expect(Expense::query()->count())->toBe(1);
 });
 
+it('can add a one-time expense', function () {
+    $user = User::factory()->create();
+    $category = Category::factory()->create(['name' => 'Hospital']);
+
+    loginAs($user->email)
+        ->navigate('/expenses/create')
+        ->type('amount', '3200')
+        ->select('category_id', $category->id)
+        ->check('is_one_time')
+        ->press('Add Expense')
+        ->assertPathIs('/expenses')
+        ->assertSee('Hospital')
+        ->assertSee('one-time')
+        ->assertSee('₹3,200');
+
+    expect(Expense::query()->first()->is_one_time)->toBeTrue();
+});
+
+it('persists unchecking one-time when editing an expense', function () {
+    $user = User::factory()->create();
+    $expense = Expense::factory()->oneTime()->create(['amount' => 150]);
+
+    loginAs($user->email)
+        ->navigate('/expenses/'.$expense->id.'/edit')
+        ->uncheck('is_one_time')
+        ->press('Update')
+        ->assertPathIs('/expenses')
+        ->assertSee('Expense updated successfully.')
+        ->assertDontSee('one-time');
+
+    expect($expense->fresh()->is_one_time)->toBeFalse();
+});
+
 it('can see validation errors for creating a new expense', function () {
     $user = User::factory()->create();
 

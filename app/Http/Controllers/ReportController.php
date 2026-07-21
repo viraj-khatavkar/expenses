@@ -35,7 +35,12 @@ class ReportController extends Controller
             ->where('date', '<=', $fyEnd->format('Y-m-d'))
             ->get();
 
+        $oneTimeExpenses = $expenses->filter(fn (Expense $expense) => $expense->is_one_time);
+        $regularExpenses = $expenses->reject(fn (Expense $expense) => $expense->is_one_time);
+
         $spentTotal = (float) $expenses->sum('amount');
+        $oneTimeTotal = (float) $oneTimeExpenses->sum('amount');
+        $regularTotal = $spentTotal - $oneTimeTotal;
         $incomeTotal = (float) $incomes->sum('amount');
 
         if ($spentTotal === 0.0 && $incomeTotal === 0.0) {
@@ -63,9 +68,17 @@ class ReportController extends Controller
                     ? (int) round(($incomeTotal - $spentTotal) / $incomeTotal * 100)
                     : null,
                 'avgMonthlySpend' => round($spentTotal / $elapsedMonths, 2),
+                'regularSpent' => round($regularTotal, 2),
+                'oneTimeSpent' => round($oneTimeTotal, 2),
+                'oneTimeCount' => $oneTimeExpenses->count(),
+                'coreSaved' => round($incomeTotal - $regularTotal, 2),
+                'coreSavingsRate' => $incomeTotal > 0
+                    ? (int) round(($incomeTotal - $regularTotal) / $incomeTotal * 100)
+                    : null,
+                'avgMonthlyRegularSpend' => round($regularTotal / $elapsedMonths, 2),
             ],
             'monthly' => $this->monthlyCashflow($monthKeys, $expenses, $incomes, $now),
-            'categoryTrends' => $this->categoryTrends($monthKeys, $expenses, $spentTotal, $elapsedMonths),
+            'categoryTrends' => $this->categoryTrends($monthKeys, $regularExpenses, $regularTotal, $elapsedMonths),
             'biggestExpenses' => $this->biggestExpenses($expenses),
         ]);
     }
@@ -128,13 +141,15 @@ class ReportController extends Controller
     }
 
     /**
+     * Trends cover regular spending only, so one-time events don't drown the baseline.
+     *
      * @return array<int, array{name: string, total: float, count: int, share: int, avgPerMonth: float, monthly: array<int, float>}>
      */
-    private function categoryTrends(Collection $monthKeys, Collection $expenses, float $spentTotal, int $elapsedMonths): array
+    private function categoryTrends(Collection $monthKeys, Collection $regularExpenses, float $regularTotal, int $elapsedMonths): array
     {
-        return $expenses
+        return $regularExpenses
             ->groupBy(fn (Expense $expense) => $expense->category->name)
-            ->map(function (Collection $items, string $name) use ($monthKeys, $spentTotal, $elapsedMonths) {
+            ->map(function (Collection $items, string $name) use ($monthKeys, $regularTotal, $elapsedMonths) {
                 $byMonth = $items
                     ->groupBy(fn (Expense $expense) => Date::parse($expense->date)->format('Y-m'))
                     ->map(fn (Collection $monthItems) => (float) $monthItems->sum('amount'));
@@ -145,7 +160,7 @@ class ReportController extends Controller
                     'name' => $name,
                     'total' => $total,
                     'count' => $items->count(),
-                    'share' => $spentTotal > 0 ? (int) round($total / $spentTotal * 100) : 0,
+                    'share' => $regularTotal > 0 ? (int) round($total / $regularTotal * 100) : 0,
                     'avgPerMonth' => round($total / $elapsedMonths, 2),
                     'monthly' => $monthKeys->map(fn (string $key) => $byMonth[$key] ?? 0.0)->all(),
                 ];
@@ -157,7 +172,7 @@ class ReportController extends Controller
     }
 
     /**
-     * @return array<int, array{id: int, date: string, category: string, note: string|null, amount: float}>
+     * @return array<int, array{id: int, date: string, category: string, note: string|null, amount: float, isOneTime: bool}>
      */
     private function biggestExpenses(Collection $expenses): array
     {
@@ -171,6 +186,7 @@ class ReportController extends Controller
                 'category' => $expense->category->name,
                 'note' => $expense->note,
                 'amount' => (float) $expense->amount,
+                'isOneTime' => $expense->is_one_time,
             ])
             ->all();
     }
