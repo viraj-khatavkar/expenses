@@ -172,37 +172,43 @@ it('keeps the expense when the delete confirmation is cancelled', function () {
     expect(Expense::query()->count())->toBe(1);
 });
 
-it('can add a one-time expense', function () {
+it('includes a large expense in the month total without a spending flag', function () {
     $user = User::factory()->create();
     $category = Category::factory()->create(['name' => 'Hospital']);
+    Expense::factory()->for($category)->create(['amount' => 800]);
 
     loginAs($user->email)
         ->navigate('/expenses/create')
+        ->assertDontSee('One-time expense')
         ->type('amount', '3200')
         ->select('category_id', $category->id)
-        ->check('is_one_time')
         ->press('Add Expense')
         ->assertPathIs('/expenses')
         ->assertSee('Hospital')
-        ->assertSee('one-time')
-        ->assertSee('₹3,200');
+        ->assertSee('₹3,200')
+        ->assertSee('₹4,000')
+        ->assertNoJavaScriptErrors();
 
-    expect(Expense::query()->first()->is_one_time)->toBeTrue();
+    expect((float) Expense::query()->sum('amount'))->toBe(4000.0);
 });
 
-it('persists unchecking one-time when editing an expense', function () {
+it('keeps the expense amount when updating only its note', function () {
     $user = User::factory()->create();
-    $expense = Expense::factory()->oneTime()->create(['amount' => 150]);
+    $expense = Expense::factory()->create(['amount' => 150, 'note' => 'Original note']);
 
     loginAs($user->email)
         ->navigate('/expenses/'.$expense->id.'/edit')
-        ->uncheck('is_one_time')
+        ->assertDontSee('One-time expense')
+        ->fill('note', 'Updated note')
         ->press('Update')
         ->assertPathIs('/expenses')
         ->assertSee('Expense updated successfully.')
-        ->assertDontSee('one-time');
+        ->assertSee('Updated note')
+        ->assertSee('₹150')
+        ->assertNoJavaScriptErrors();
 
-    expect($expense->fresh()->is_one_time)->toBeFalse();
+    expect((float) $expense->fresh()->amount)->toBe(150.0)
+        ->and($expense->fresh()->note)->toBe('Updated note');
 });
 
 it('can see validation errors for creating a new expense', function () {

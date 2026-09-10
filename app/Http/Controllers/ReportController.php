@@ -16,185 +16,242 @@ class ReportController extends Controller
 {
     public function __invoke(Request $request): Response
     {
-        $now = Date::today();
-        $currentFyStart = $now->month >= 4 ? $now->year : $now->year - 1;
-
-        $fy = (int) $request->input('fy', $currentFyStart);
-        $fyStart = Carbon::create($fy, 4, 1);
+        $today = Date::today();
+        $currentFyStart = $today->month >= 4 ? $today->year : $today->year - 1;
+        $requestedFy = filter_var($request->input('fy', $currentFyStart), FILTER_VALIDATE_INT);
+        $fy = $requestedFy !== false && $requestedFy >= 1900 && $requestedFy <= $currentFyStart
+            ? $requestedFy
+            : $currentFyStart;
+        $fyStart = Carbon::create($fy, 4, 1)->startOfDay();
         $fyEnd = $fyStart->copy()->addYear()->subDay();
+        $periodEnd = $fyEnd->lessThan($today) ? $fyEnd : $today;
+        $previousStart = $fyStart->copy()->subYear();
+        $previousEnd = $periodEnd->copy()->subYearNoOverflow();
+        $completedMonths = $fyEnd->lessThan($today)
+            ? 12
+            : (int) $fyStart->diffInMonths($today->copy()->startOfMonth());
 
-        $fyLabel = 'FY '.$fyStart->year.'-'.substr((string) $fyEnd->year, 2);
-
-        $expenses = Expense::with('category')
-            ->where('date', '>=', $fyStart->format('Y-m-d'))
-            ->where('date', '<=', $fyEnd->format('Y-m-d'))
-            ->get();
-
+        $allExpenses = Expense::query()
+            ->with('category:id,name')
+            ->where('date', '>=', $previousStart->toDateString())
+            ->where('date', '<', $periodEnd->copy()->addDay()->toDateString())
+            ->get(['id', 'category_id', 'date', 'amount', 'note']);
+        $expenses = $this->expensesBetween($allExpenses, $fyStart, $periodEnd);
+        $previousExpenses = $this->expensesBetween($allExpenses, $previousStart, $previousEnd);
         $incomes = Income::query()
-            ->where('date', '>=', $fyStart->format('Y-m-d'))
-            ->where('date', '<=', $fyEnd->format('Y-m-d'))
-            ->get();
-
-        $oneTimeExpenses = $expenses->filter(fn (Expense $expense) => $expense->is_one_time);
-        $regularExpenses = $expenses->reject(fn (Expense $expense) => $expense->is_one_time);
-
-        $spentTotal = (float) $expenses->sum('amount');
-        $oneTimeTotal = (float) $oneTimeExpenses->sum('amount');
-        $regularTotal = $spentTotal - $oneTimeTotal;
-        $incomeTotal = (float) $incomes->sum('amount');
-
-        if ($spentTotal === 0.0 && $incomeTotal === 0.0) {
-            return inertia('Reports/Index', [
-                'fy' => $fy,
-                'fyLabel' => $fyLabel,
-                'availableFys' => $this->availableFinancialYears($currentFyStart),
-                'empty' => true,
-            ]);
+            ->where('date', '>=', $fyStart->toDateString())
+            ->where('date', '<', $periodEnd->copy()->addDay()->toDateString())
+            ->get(['id', 'date', 'amount']);
+        $spentTotal = round((float) $expenses->sum('amount'), 2);
+        $incomeTotal = round((float) $incomes->sum('amount'), 2);
+        $completedExpenses = $expenses
+            ->filter(fn (Expense $expense): bool => $expense->date->lessThan($fyStart->copy()->addMonths($completedMonths)));
+        $averageLabel = $completedMonths === 0
+            ? 'No completed months yet'
+            : 'Based on '.$completedMonths.' completed '.($completedMonths === 1 ? 'month' : 'months');
+        if ($completedMonths > 0 && $completedExpenses->isEmpty()) {
+            $averageLabel = 'No expenses recorded in completed months';
         }
-
-        $elapsedMonths = $this->elapsedMonths($fyStart, $fyEnd, $now);
-        $monthKeys = $this->financialYearMonthKeys($fyStart);
 
         return inertia('Reports/Index', [
             'fy' => $fy,
-            'fyLabel' => $fyLabel,
+            'fyLabel' => 'FY '.$fy.'-'.substr((string) ($fy + 1), 2),
             'availableFys' => $this->availableFinancialYears($currentFyStart),
-            'empty' => false,
+            'empty' => $expenses->isEmpty() && $incomes->isEmpty(),
+            'period' => [
+                'label' => $this->periodLabel($fyStart, $periodEnd),
+                'startDate' => $fyStart->toDateString(),
+                'endDate' => $periodEnd->toDateString(),
+                'isCurrent' => $fy === $currentFyStart,
+                'completedMonths' => $completedMonths,
+                'averageLabel' => $averageLabel,
+            ],
             'cashflow' => [
                 'income' => $incomeTotal,
                 'spent' => $spentTotal,
-                'saved' => round($incomeTotal - $spentTotal, 2),
-                'savingsRate' => $incomeTotal > 0
-                    ? (int) round(($incomeTotal - $spentTotal) / $incomeTotal * 100)
+                'net' => round($incomeTotal - $spentTotal, 2),
+                'netRate' => $incomeTotal > 0 ? round(($incomeTotal - $spentTotal) / $incomeTotal * 100, 1) : null,
+                'avgMonthlySpend' => $completedMonths > 0 && $completedExpenses->isNotEmpty()
+                    ? round($completedExpenses->sum('amount') / $completedMonths, 2)
                     : null,
-                'avgMonthlySpend' => round($spentTotal / $elapsedMonths, 2),
-                'regularSpent' => round($regularTotal, 2),
-                'oneTimeSpent' => round($oneTimeTotal, 2),
-                'oneTimeCount' => $oneTimeExpenses->count(),
-                'coreSaved' => round($incomeTotal - $regularTotal, 2),
-                'coreSavingsRate' => $incomeTotal > 0
-                    ? (int) round(($incomeTotal - $regularTotal) / $incomeTotal * 100)
-                    : null,
-                'avgMonthlyRegularSpend' => round($regularTotal / $elapsedMonths, 2),
             ],
-            'monthly' => $this->monthlyCashflow($monthKeys, $expenses, $incomes, $now),
-            'categoryTrends' => $this->categoryTrends($monthKeys, $regularExpenses, $regularTotal, $elapsedMonths),
+            'monthly' => $this->monthlyCashflow($fyStart, $expenses, $incomes, $today),
+            'monthlyComparison' => $completedMonths === 0
+                ? null
+                : $this->monthlyComparison($allExpenses, $fyStart->copy()->addMonths($completedMonths - 1)),
+            'annualComparison' => $this->comparison(
+                $expenses,
+                $previousExpenses,
+                $this->periodLabel($fyStart, $periodEnd),
+                $this->periodLabel($previousStart, $previousEnd),
+            ),
+            'categoryTotals' => $this->categoryTotals($expenses, $previousExpenses, $fyStart, $periodEnd),
             'biggestExpenses' => $this->biggestExpenses($expenses),
         ]);
     }
 
     /**
-     * The 12 month keys (Y-m) of the financial year, April through March.
-     *
-     * @return Collection<int, string>
+     * @param  Collection<int, Expense>  $expenses
+     * @return Collection<int, Expense>
      */
-    private function financialYearMonthKeys(Carbon $fyStart): Collection
+    private function expensesBetween(Collection $expenses, Carbon $start, Carbon $end): Collection
     {
-        return collect(range(0, 11))
-            ->map(fn (int $offset) => $fyStart->copy()->addMonths($offset)->format('Y-m'));
+        return $expenses->filter(fn (Expense $expense): bool => $expense->date->betweenIncluded($start, $end->copy()->endOfDay()));
     }
 
-    private function elapsedMonths(Carbon $fyStart, Carbon $fyEnd, Carbon $now): int
+    private function periodLabel(Carbon $start, Carbon $end): string
     {
-        $lastVisibleMonth = $fyEnd->lessThan($now)
-            ? $fyEnd->copy()->startOfMonth()
-            : $now->copy()->startOfMonth();
+        return $start->format('j M Y').' – '.$end->format('j M Y');
+    }
 
-        if ($lastVisibleMonth->lessThan($fyStart)) {
-            return 1;
-        }
-
-        return (int) $fyStart->diffInMonths($lastVisibleMonth) + 1;
+    private function percentageChange(float $current, float $previous): ?float
+    {
+        return $previous > 0 ? round(($current - $previous) / $previous * 100, 1) : null;
     }
 
     /**
-     * @return array<int, array{monthKey: string, label: string, spent: float, income: float, net: float, isCurrent: bool, isFuture: bool}>
+     * @param  Collection<int, Expense>  $current
+     * @param  Collection<int, Expense>  $previous
+     * @return array{currentLabel: string, previousLabel: string, currentTotal: float, previousTotal: float, difference: float, percentageChange: float|null, currentHasExpenses: bool, previousHasExpenses: bool}
      */
-    private function monthlyCashflow(Collection $monthKeys, Collection $expenses, Collection $incomes, Carbon $now): array
+    private function comparison(Collection $current, Collection $previous, string $currentLabel, string $previousLabel): array
     {
-        $spentByMonth = $expenses
-            ->groupBy(fn (Expense $expense) => Date::parse($expense->date)->format('Y-m'))
-            ->map(fn (Collection $monthExpenses) => (float) $monthExpenses->sum('amount'));
+        $currentTotal = round((float) $current->sum('amount'), 2);
+        $previousTotal = round((float) $previous->sum('amount'), 2);
 
-        $incomeByMonth = $incomes
-            ->groupBy(fn (Income $income) => Date::parse($income->date)->format('Y-m'))
-            ->map(fn (Collection $monthIncomes) => (float) $monthIncomes->sum('amount'));
-
-        $currentKey = $now->format('Y-m');
-
-        return $monthKeys
-            ->map(function (string $key) use ($spentByMonth, $incomeByMonth, $currentKey) {
-                $spent = $spentByMonth[$key] ?? 0.0;
-                $income = $incomeByMonth[$key] ?? 0.0;
-
-                return [
-                    'monthKey' => $key,
-                    'label' => Date::parse($key)->format('M'),
-                    'spent' => $spent,
-                    'income' => $income,
-                    'net' => round($income - $spent, 2),
-                    'isCurrent' => $key === $currentKey,
-                    'isFuture' => $key > $currentKey,
-                ];
-            })
-            ->all();
+        return [
+            'currentLabel' => $currentLabel,
+            'previousLabel' => $previousLabel,
+            'currentTotal' => $currentTotal,
+            'previousTotal' => $previousTotal,
+            'difference' => round($currentTotal - $previousTotal, 2),
+            'percentageChange' => $this->percentageChange($currentTotal, $previousTotal),
+            'currentHasExpenses' => $current->isNotEmpty(),
+            'previousHasExpenses' => $previous->isNotEmpty(),
+        ];
     }
 
     /**
-     * Trends cover regular spending only, so one-time events don't drown the baseline.
-     *
-     * @return array<int, array{name: string, total: float, count: int, share: int, avgPerMonth: float, monthly: array<int, float>}>
+     * @param  Collection<int, Expense>  $expenses
+     * @param  Collection<int, Income>  $incomes
+     * @return array<int, array{monthKey: string, label: string, spent: float, income: float, net: float, isCurrent: bool, isFuture: bool, hasExpenses: bool, hasIncome: bool, expensesUrl: string}>
      */
-    private function categoryTrends(Collection $monthKeys, Collection $regularExpenses, float $regularTotal, int $elapsedMonths): array
+    private function monthlyCashflow(Carbon $fyStart, Collection $expenses, Collection $incomes, Carbon $today): array
     {
-        return $regularExpenses
-            ->groupBy(fn (Expense $expense) => $expense->category->name)
-            ->map(function (Collection $items, string $name) use ($monthKeys, $regularTotal, $elapsedMonths) {
-                $byMonth = $items
-                    ->groupBy(fn (Expense $expense) => Date::parse($expense->date)->format('Y-m'))
-                    ->map(fn (Collection $monthItems) => (float) $monthItems->sum('amount'));
+        $spentByMonth = $expenses->groupBy(fn (Expense $expense): string => $expense->date->format('Y-m'));
+        $incomeByMonth = $incomes->groupBy(fn (Income $income): string => $income->date->format('Y-m'));
+        $currentKey = $today->format('Y-m');
 
-                $total = (float) $items->sum('amount');
+        return collect(range(0, 11))->map(function (int $offset) use ($fyStart, $spentByMonth, $incomeByMonth, $currentKey, $today): array {
+            $month = $fyStart->copy()->addMonths($offset);
+            $key = $month->format('Y-m');
+            $monthExpenses = $spentByMonth->get($key, collect());
+            $monthIncomes = $incomeByMonth->get($key, collect());
+            $spent = round((float) $monthExpenses->sum('amount'), 2);
+            $income = round((float) $monthIncomes->sum('amount'), 2);
+
+            return [
+                'monthKey' => $key,
+                'label' => $month->format('M'),
+                'spent' => $spent,
+                'income' => $income,
+                'net' => round($income - $spent, 2),
+                'isCurrent' => $key === $currentKey,
+                'isFuture' => $key > $currentKey,
+                'hasExpenses' => $monthExpenses->isNotEmpty(),
+                'hasIncome' => $monthIncomes->isNotEmpty(),
+                'expensesUrl' => route('expenses.index', $key === $currentKey
+                    ? ['start_date' => $month->toDateString(), 'end_date' => $today->toDateString()]
+                    : ['month' => $key]),
+            ];
+        })->all();
+    }
+
+    /**
+     * @param  Collection<int, Expense>  $expenses
+     * @return array{currentLabel: string, previousLabel: string, currentTotal: float, previousTotal: float, difference: float, percentageChange: float|null, currentHasExpenses: bool, previousHasExpenses: bool, expensesUrl: string, drivers: array<int, array{categoryId: int, name: string, currentTotal: float, previousTotal: float, difference: float, expensesUrl: string}>}
+     */
+    private function monthlyComparison(Collection $expenses, Carbon $month): array
+    {
+        $previousMonth = $month->copy()->subMonth();
+        $current = $this->expensesBetween($expenses, $month, $month->copy()->endOfMonth());
+        $previous = $this->expensesBetween($expenses, $previousMonth, $previousMonth->copy()->endOfMonth());
+        $currentByCategory = $current->groupBy('category_id');
+        $previousByCategory = $previous->groupBy('category_id');
+        $drivers = $current->concat($previous)->unique('category_id')->map(function (Expense $expense) use ($currentByCategory, $previousByCategory, $month): array {
+            $currentTotal = round((float) $currentByCategory->get($expense->category_id, collect())->sum('amount'), 2);
+            $previousTotal = round((float) $previousByCategory->get($expense->category_id, collect())->sum('amount'), 2);
+
+            return [
+                'categoryId' => $expense->category_id,
+                'name' => $expense->category->name,
+                'currentTotal' => $currentTotal,
+                'previousTotal' => $previousTotal,
+                'difference' => round($currentTotal - $previousTotal, 2),
+                'expensesUrl' => route('expenses.index', ['month' => $month->format('Y-m'), 'category_id' => $expense->category_id]),
+            ];
+        })->filter(fn (array $driver): bool => $driver['difference'] !== 0.0)
+            ->sortByDesc(fn (array $driver): float => abs($driver['difference']))
+            ->take(5)->values()->all();
+
+        return [
+            ...$this->comparison($current, $previous, $month->format('M Y'), $previousMonth->format('M Y')),
+            'expensesUrl' => route('expenses.index', ['month' => $month->format('Y-m')]),
+            'drivers' => $drivers,
+        ];
+    }
+
+    /**
+     * @param  Collection<int, Expense>  $expenses
+     * @param  Collection<int, Expense>  $previousExpenses
+     * @return array<int, array{id: int, name: string, total: float, share: float, previousTotal: float, change: float, changePercent: float|null, expensesUrl: string}>
+     */
+    private function categoryTotals(Collection $expenses, Collection $previousExpenses, Carbon $start, Carbon $end): array
+    {
+        $currentByCategory = $expenses->groupBy('category_id');
+        $previousByCategory = $previousExpenses->groupBy('category_id');
+        $spentTotal = (float) $expenses->sum('amount');
+
+        return $expenses->concat($previousExpenses)->unique('category_id')
+            ->map(function (Expense $expense) use ($currentByCategory, $previousByCategory, $spentTotal, $start, $end): array {
+                $total = round((float) $currentByCategory->get($expense->category_id, collect())->sum('amount'), 2);
+                $previousTotal = round((float) $previousByCategory->get($expense->category_id, collect())->sum('amount'), 2);
 
                 return [
-                    'name' => $name,
+                    'id' => $expense->category_id,
+                    'name' => $expense->category->name,
                     'total' => $total,
-                    'count' => $items->count(),
-                    'share' => $regularTotal > 0 ? (int) round($total / $regularTotal * 100) : 0,
-                    'avgPerMonth' => round($total / $elapsedMonths, 2),
-                    'monthly' => $monthKeys->map(fn (string $key) => $byMonth[$key] ?? 0.0)->all(),
+                    'share' => $spentTotal > 0 ? round($total / $spentTotal * 100, 1) : 0.0,
+                    'previousTotal' => $previousTotal,
+                    'change' => round($total - $previousTotal, 2),
+                    'changePercent' => $this->percentageChange($total, $previousTotal),
+                    'expensesUrl' => route('expenses.index', [
+                        'category_id' => $expense->category_id,
+                        'start_date' => $start->toDateString(),
+                        'end_date' => $end->toDateString(),
+                    ]),
                 ];
-            })
-            ->sortByDesc('total')
-            ->take(8)
-            ->values()
-            ->all();
+            })->sortByDesc('total')->values()->all();
     }
 
     /**
-     * @return array<int, array{id: int, date: string, category: string, note: string|null, amount: float, isOneTime: bool}>
+     * @param  Collection<int, Expense>  $expenses
+     * @return array<int, array{id: int, date: string, category: string, note: string|null, amount: float, url: string}>
      */
     private function biggestExpenses(Collection $expenses): array
     {
-        return $expenses
-            ->sortByDesc('amount')
-            ->take(8)
-            ->values()
-            ->map(fn (Expense $expense) => [
+        return $expenses->sortByDesc('amount')->take(8)->values()
+            ->map(fn (Expense $expense): array => [
                 'id' => $expense->id,
-                'date' => Date::parse($expense->date)->format('j M'),
+                'date' => $expense->date->format('j M'),
                 'category' => $expense->category->name,
                 'note' => $expense->note,
                 'amount' => (float) $expense->amount,
-                'isOneTime' => $expense->is_one_time,
-            ])
-            ->all();
+                'url' => route('expenses.edit', $expense),
+            ])->all();
     }
 
     /**
-     * Financial years from the earliest recorded expense or income up to the
-     * current financial year, newest first.
-     *
      * @return array<int, array{year: int, label: string}>
      */
     private function availableFinancialYears(int $currentFyStart): array
@@ -203,13 +260,10 @@ class ReportController extends Controller
             Expense::query()->min('date'),
             Income::query()->min('date'),
         ])->filter()->min();
-
-        if ($earliest === null) {
-            $earliestFyStart = $currentFyStart;
-        } else {
-            $earliestDate = Date::parse($earliest);
-            $earliestFyStart = $earliestDate->month >= 4 ? $earliestDate->year : $earliestDate->year - 1;
-        }
+        $earliestDate = $earliest === null ? null : Date::parse($earliest);
+        $earliestFyStart = $earliestDate === null
+            ? $currentFyStart
+            : min($currentFyStart, $earliestDate->month >= 4 ? $earliestDate->year : $earliestDate->year - 1);
 
         return array_map(
             fn (int $year): array => [

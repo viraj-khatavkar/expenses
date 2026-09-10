@@ -4,33 +4,33 @@ namespace App\Action;
 
 use App\Models\Expense;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Date;
 
-use function app;
-
-final readonly class GetExpensesForMonthAction
+final readonly class GetExpenseDayGroupsAction
 {
+    public function __construct(private GetExpensesAction $getExpenses) {}
+
     /**
-     * Group a month's expenses by day, newest first, with a total per day.
-     *
      * @return Collection<int, array{label: string, total: float, expenses: Collection<int, Expense>}>
      */
-    public function handle(Carbon $monthStart): Collection
+    public function handle(Carbon $startDate, Carbon $endDate, ?int $categoryId = null): Collection
     {
-        return app(GetExpensesAction::class)
-            ->handle($monthStart->copy()->startOfMonth(), $monthStart->copy()->endOfMonth())
+        return $this->getExpenses->handle($startDate, $endDate)
+            ->when($categoryId !== null, fn (Builder $query): Builder => $query->where('category_id', $categoryId))
             ->orderByDesc('date')
             ->orderByDesc('id')
             ->with('category')
             ->get()
-            ->groupBy(fn (Expense $expense) => Date::parse($expense->date)->format('Y-m-d'))
-            ->map(function (Collection $expenses, string $dateString) {
+            ->groupBy(fn (Expense $expense): string => Date::parse($expense->date)->format('Y-m-d'))
+            ->map(function (Collection $expenses, string $dateString) use ($startDate, $endDate): array {
                 $date = Date::parse($dateString);
 
                 $label = match (true) {
                     $date->isToday() => 'Today',
                     $date->isYesterday() => 'Yesterday',
+                    $startDate->year !== $endDate->year => $date->format('D, d F Y'),
                     default => $date->format('D, d F'),
                 };
 

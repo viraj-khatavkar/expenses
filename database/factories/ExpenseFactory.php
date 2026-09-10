@@ -19,9 +19,4 @@ class ExpenseFactory extends Factory
             'category_id' => Category::factory(),
         ];
     }
-
-    public function oneTime(): static
-    {
-        return $this->state(['is_one_time' => true]);
-    }
 }

@@ -131,17 +131,19 @@ it('shows correct total for all twelve months of financial year', function () {
     }
 });
 
-it('shows the deficit and core savings in the hero when one-time expenses exist', function () {
+it('shows the deficit from all expenses in the hero', function () {
     $user = User::factory()->create();
 
     Income::factory()->create(['amount' => 100000, 'date' => Date::today()]);
     Expense::factory()->create(['amount' => 55000, 'date' => Date::today()]);
-    Expense::factory()->oneTime()->create(['amount' => 75000, 'date' => Date::today()]);
+    Expense::factory()->create(['amount' => 75000, 'date' => Date::today()]);
 
     loginAs($user->email)
+        ->assertSeeIn('#yearly-stat', '₹1,30,000')
         ->assertSeeIn('#yearly-stat', 'Deficit')
         ->assertSeeIn('#yearly-stat', '₹30K')
-        ->assertSeeIn('#yearly-stat', 'Excluding one-time: saved ₹45K (45%)');
+        ->assertDontSee('Excluding one-time')
+        ->assertNoJavaScriptErrors();
 });
 
 it('shows correct category totals within months', function () {

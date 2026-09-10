@@ -12,6 +12,6 @@ final readonly class GetExpensesAction
     {
         return Expense::query()
             ->where('date', '>=', $startDate->format('Y-m-d'))
-            ->where('date', '<=', $endDate->format('Y-m-d'));
+            ->where('date', '<', $endDate->copy()->addDay()->format('Y-m-d'));
     }
 }

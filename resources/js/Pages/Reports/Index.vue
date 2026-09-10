@@ -2,7 +2,7 @@
     <div class="mx-auto max-w-3xl">
         <Head title="Reports" />
 
-        <PageHeader title="Reports" :subtitle="`Cashflow and trends for ${fyLabel}`">
+        <PageHeader title="Reports" :subtitle="period.label">
             <label for="fy-switcher" class="sr-only">Financial Year</label>
             <select
                 id="fy-switcher"
@@ -16,275 +16,451 @@
             </select>
         </PageHeader>
 
-        <!-- Empty state -->
         <div
             v-if="empty"
             class="rounded-xl bg-white px-6 py-16 text-center shadow-sm ring-1 ring-gray-950/5 dark:bg-white/5 dark:ring-white/10"
         >
-            <p class="text-sm text-gray-400 dark:text-gray-500">
-                Nothing recorded in {{ fyLabel }} yet.
+            <p class="text-sm text-gray-500 dark:text-gray-400">
+                Nothing recorded in {{ fyLabel }} for this period.
             </p>
         </div>
 
         <template v-else>
-            <!-- Cashflow summary -->
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div data-testid="cashflow-summary" class="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <div
-                    class="rounded-xl bg-gray-50 px-5 py-5 shadow-sm ring-1 ring-gray-950/5 dark:bg-white/5 dark:ring-white/10"
+                    class="min-w-0 rounded-xl bg-gray-50 px-5 py-5 ring-1 ring-gray-950/5 dark:bg-white/5 dark:ring-white/10"
                 >
-                    <p class="text-xs font-medium text-gray-400 dark:text-gray-500">Income</p>
+                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400">Income</p>
                     <p
-                        class="mt-1 text-2xl font-bold tracking-wide text-gray-900 dark:text-white"
+                        class="mt-1 text-2xl font-bold break-words text-gray-900 tabular-nums dark:text-white"
                     >
-                        {{ compactCurrencyFormatter(cashflow!.income) }}
+                        {{ currencyFormatter(cashflow!.income) }}
                     </p>
                 </div>
                 <div
-                    class="rounded-xl bg-gray-50 px-5 py-5 shadow-sm ring-1 ring-gray-950/5 dark:bg-white/5 dark:ring-white/10"
+                    class="min-w-0 rounded-xl bg-gray-50 px-5 py-5 ring-1 ring-gray-950/5 dark:bg-white/5 dark:ring-white/10"
                 >
-                    <p class="text-xs font-medium text-gray-400 dark:text-gray-500">Spent</p>
+                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400">Spent</p>
                     <p
-                        class="mt-1 text-2xl font-bold tracking-wide text-gray-900 dark:text-white"
+                        class="mt-1 text-2xl font-bold break-words text-gray-900 tabular-nums dark:text-white"
                     >
-                        {{ compactCurrencyFormatter(cashflow!.spent) }}
+                        {{ currencyFormatter(cashflow!.spent) }}
                     </p>
-                    <template v-if="hasOneTime">
-                        <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">
-                            {{ compactCurrencyFormatter(cashflow!.regularSpent) }} regular ·
-                            {{ compactCurrencyFormatter(cashflow!.oneTimeSpent) }} one-time
-                        </p>
-                        <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">
-                            {{ compactCurrencyFormatter(cashflow!.avgMonthlyRegularSpend) }}/mo
-                            regular average
-                        </p>
-                    </template>
-                    <p v-else class="mt-1 text-xs text-gray-400 dark:text-gray-500">
-                        {{ compactCurrencyFormatter(cashflow!.avgMonthlySpend) }}/mo average
+                    <p
+                        v-if="cashflow!.avgMonthlySpend !== null"
+                        class="mt-2 text-xs text-gray-500 dark:text-gray-400"
+                    >
+                        {{ currencyFormatter(cashflow!.avgMonthlySpend) }}/mo average
+                    </p>
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        {{ period.averageLabel }}
                     </p>
                 </div>
                 <div
-                    class="rounded-xl bg-gray-50 px-5 py-5 shadow-sm ring-1 ring-gray-950/5 dark:bg-white/5 dark:ring-white/10"
+                    class="min-w-0 rounded-xl bg-gray-50 px-5 py-5 ring-1 ring-gray-950/5 dark:bg-white/5 dark:ring-white/10"
                 >
-                    <p class="text-xs font-medium text-gray-400 dark:text-gray-500">
-                        {{ cashflow!.saved >= 0 || noIncomeRecorded ? 'Saved' : 'Deficit' }}
+                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400">Net cashflow</p>
+                    <p
+                        class="mt-1 text-2xl font-bold break-words tabular-nums"
+                        :class="balanceClass(cashflow!.net)"
+                    >
+                        {{ signedCurrency(cashflow!.net) }}
                     </p>
-                    <template v-if="noIncomeRecorded">
-                        <p
-                            class="mt-1 text-2xl font-bold tracking-wide text-gray-400 dark:text-gray-500"
-                        >
-                            —
-                        </p>
-                        <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">
-                            No income recorded this year
-                        </p>
-                    </template>
-                    <template v-else>
-                        <p
-                            class="mt-1 text-2xl font-bold tracking-wide"
-                            :class="
-                                cashflow!.saved >= 0
-                                    ? 'text-emerald-600 dark:text-emerald-400'
-                                    : 'text-amber-600 dark:text-amber-400'
-                            "
-                        >
-                            {{ compactCurrencyFormatter(Math.abs(cashflow!.saved)) }}
-                        </p>
-                        <p
-                            v-if="cashflow!.savingsRate !== null"
-                            class="mt-1 text-xs text-gray-400 dark:text-gray-500"
-                        >
-                            {{ cashflow!.savingsRate }}% of income
-                        </p>
-                        <p
-                            v-if="hasOneTime && cashflow!.coreSavingsRate !== null"
-                            class="mt-1 text-xs text-gray-400 dark:text-gray-500"
-                        >
-                            <template v-if="cashflow!.coreSaved >= 0">
-                                {{ compactCurrencyFormatter(cashflow!.coreSaved) }} saved ({{
-                                    cashflow!.coreSavingsRate
-                                }}%) excluding one-time
-                            </template>
-                            <template v-else>
-                                {{ compactCurrencyFormatter(Math.abs(cashflow!.coreSaved)) }}
-                                deficit excluding one-time
-                            </template>
-                        </p>
-                    </template>
-                </div>
-            </div>
-
-            <!-- Monthly cashflow -->
-            <div
-                class="mt-6 rounded-xl bg-white shadow-sm ring-1 ring-gray-950/5 dark:bg-white/5 dark:ring-white/10"
-            >
-                <div
-                    class="flex items-center justify-between border-b border-gray-950/5 px-5 py-4 dark:border-white/10"
-                >
-                    <h2 class="text-sm font-semibold text-gray-900 dark:text-white">
-                        Monthly cashflow
-                    </h2>
-                    <div
-                        class="flex items-center gap-4 text-xs text-gray-400 dark:text-gray-500"
+                    <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                        Income minus recorded expenses
+                    </p>
+                    <p
+                        v-if="cashflow!.netRate !== null"
+                        class="mt-1 text-xs text-gray-500 dark:text-gray-400"
                     >
-                        <span class="flex items-center gap-1.5">
-                            <span class="size-2 rounded-full bg-emerald-400"></span>
-                            Income
-                        </span>
-                        <span class="flex items-center gap-1.5">
-                            <span class="size-2 rounded-full bg-indigo-400"></span>
-                            Spent
-                        </span>
-                    </div>
+                        {{ cashflow!.netRate }}% of recorded income
+                    </p>
+                    <p v-else class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        No income recorded in this period
+                    </p>
                 </div>
-                <ul class="divide-y divide-gray-950/5 dark:divide-white/10">
-                    <li
-                        v-for="month in visibleMonths"
-                        :key="month.monthKey"
-                        :data-testid="`cashflow-${month.monthKey}`"
-                        class="px-5 py-3"
-                    >
-                        <div class="flex items-center gap-4">
-                            <span
-                                class="w-8 shrink-0 text-xs font-medium"
-                                :class="
-                                    month.isCurrent
-                                        ? 'font-semibold text-gray-900 dark:text-white'
-                                        : 'text-gray-400 dark:text-gray-500'
-                                "
-                            >
-                                {{ month.label }}
-                            </span>
-                            <div class="flex-1 space-y-1.5">
-                                <div class="h-1.5 rounded-full bg-gray-100 dark:bg-white/10">
-                                    <div
-                                        class="h-1.5 rounded-full bg-emerald-400 transition-all duration-300 dark:bg-emerald-500"
-                                        :style="{ width: flowWidth(month.income) }"
-                                    ></div>
-                                </div>
-                                <div class="h-1.5 rounded-full bg-gray-100 dark:bg-white/10">
-                                    <div
-                                        class="h-1.5 rounded-full bg-indigo-400 transition-all duration-300 dark:bg-indigo-500"
-                                        :style="{ width: flowWidth(month.spent) }"
-                                    ></div>
-                                </div>
-                            </div>
-                            <span
-                                class="w-16 shrink-0 text-right text-sm font-semibold tabular-nums text-gray-900 dark:text-white"
-                            >
-                                {{ compactCurrencyFormatter(month.spent) }}
-                            </span>
-                            <span
-                                class="w-16 shrink-0 text-right text-xs font-medium tabular-nums"
-                                :class="netClass(month)"
-                            >
-                                {{ netLabel(month) }}
-                            </span>
-                        </div>
-                    </li>
-                </ul>
             </div>
 
-            <!-- Category trends -->
-            <div
-                v-if="categoryTrends!.length > 0"
-                data-testid="category-trends"
-                class="mt-6 rounded-xl bg-white shadow-sm ring-1 ring-gray-950/5 dark:bg-white/5 dark:ring-white/10"
-            >
-                <div
-                    class="flex items-center justify-between border-b border-gray-950/5 px-5 py-4 dark:border-white/10"
-                >
-                    <h2 class="text-sm font-semibold text-gray-900 dark:text-white">
-                        Category trends
-                    </h2>
-                    <span class="text-xs text-gray-400 dark:text-gray-500">
-                        <template v-if="hasOneTime">one-time excluded · </template>Apr → Mar
-                    </span>
-                </div>
-                <ul class="divide-y divide-gray-950/5 dark:divide-white/10">
-                    <li v-for="trend in categoryTrends" :key="trend.name" class="px-5 py-4">
-                        <div class="flex items-baseline justify-between gap-4">
-                            <p class="text-sm font-medium text-gray-900 dark:text-white">
-                                {{ trend.name }}
-                                <span class="ml-1 text-xs text-gray-400 dark:text-gray-500">
-                                    {{ trend.share }}%
-                                </span>
-                            </p>
-                            <p
-                                class="shrink-0 text-sm font-semibold tabular-nums text-gray-900 dark:text-white"
-                            >
-                                {{ compactCurrencyFormatter(trend.total) }}
-                            </p>
-                        </div>
-                        <div class="mt-2 flex items-end gap-4">
-                            <div class="flex h-9 flex-1 items-end gap-1">
-                                <div
-                                    v-for="(value, index) in trend.monthly"
-                                    :key="index"
-                                    class="flex-1 rounded-sm transition-all duration-300"
-                                    :class="
-                                        value > 0
-                                            ? index === currentMonthIndex
-                                                ? 'bg-indigo-500 dark:bg-indigo-400'
-                                                : 'bg-indigo-300 dark:bg-indigo-500/50'
-                                            : 'bg-gray-100 dark:bg-white/10'
-                                    "
-                                    :style="{ height: trendBarHeight(value, trend) }"
-                                    :title="`${monthLabels[index]}: ${compactCurrencyFormatter(value)}`"
-                                ></div>
-                            </div>
-                            <p class="shrink-0 text-xs text-gray-400 dark:text-gray-500">
-                                {{ compactCurrencyFormatter(trend.avgPerMonth) }}/mo
-                            </p>
-                        </div>
-                    </li>
-                </ul>
-            </div>
-
-            <!-- Biggest expenses -->
-            <div
-                v-if="biggestExpenses!.length > 0"
+            <section
+                data-testid="spending-changes"
                 class="mt-6 rounded-xl bg-white shadow-sm ring-1 ring-gray-950/5 dark:bg-white/5 dark:ring-white/10"
             >
                 <div class="border-b border-gray-950/5 px-5 py-4 dark:border-white/10">
                     <h2 class="text-sm font-semibold text-gray-900 dark:text-white">
-                        Biggest expenses
+                        Spending changes
                     </h2>
                 </div>
-                <ul class="divide-y divide-gray-950/5 dark:divide-white/10">
+                <div v-if="monthlyComparison" data-testid="monthly-comparison" class="px-5 py-4">
+                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                        {{ monthlyComparison.currentLabel }} compared with
+                        {{ monthlyComparison.previousLabel }}
+                    </p>
+                    <p class="mt-2 text-base font-semibold text-gray-900 dark:text-white">
+                        {{ comparisonLabel(monthlyComparison) }}
+                    </p>
+                    <p
+                        v-if="monthlyComparison.percentageChange !== null"
+                        class="mt-1 text-sm"
+                        :class="spendingChangeClass(monthlyComparison.difference)"
+                    >
+                        {{
+                            percentageLabel(
+                                monthlyComparison.percentageChange,
+                                monthlyComparison.difference
+                            )
+                        }}
+                    </p>
+                    <dl class="mt-4 grid grid-cols-2 gap-4 text-xs">
+                        <div>
+                            <dt class="text-gray-500 dark:text-gray-400">
+                                {{ monthlyComparison.previousLabel }}
+                            </dt>
+                            <dd class="mt-1 font-medium text-gray-900 tabular-nums dark:text-white">
+                                {{ currencyFormatter(monthlyComparison.previousTotal) }}
+                            </dd>
+                        </div>
+                        <div>
+                            <dt class="text-gray-500 dark:text-gray-400">
+                                {{ monthlyComparison.currentLabel }}
+                            </dt>
+                            <dd class="mt-1 font-medium text-gray-900 tabular-nums dark:text-white">
+                                {{ currencyFormatter(monthlyComparison.currentTotal) }}
+                            </dd>
+                        </div>
+                    </dl>
+                    <p
+                        v-if="missingComparisonRecords(monthlyComparison)"
+                        class="mt-3 text-xs text-gray-500 dark:text-gray-400"
+                    >
+                        {{ missingComparisonRecords(monthlyComparison) }}
+                    </p>
+                    <template v-if="monthlyComparison.drivers.length">
+                        <h3 class="mt-5 text-xs font-medium text-gray-500 dark:text-gray-400">
+                            Largest category changes
+                        </h3>
+                        <ul class="mt-2 divide-y divide-gray-950/5 dark:divide-white/10">
+                            <li
+                                v-for="driver in monthlyComparison.drivers"
+                                :key="driver.categoryId"
+                            >
+                                <Link
+                                    :href="driver.expensesUrl"
+                                    class="flex items-center justify-between gap-4 rounded-md py-3 text-sm hover:bg-gray-50 dark:hover:bg-white/5"
+                                >
+                                    <span class="min-w-0">
+                                        <span
+                                            class="font-medium wrap-anywhere text-indigo-600 dark:text-indigo-400"
+                                            >{{ driver.name }}</span
+                                        >
+                                        <span
+                                            class="mt-1 block text-xs text-gray-500 tabular-nums dark:text-gray-400"
+                                        >
+                                            {{ currencyFormatter(driver.previousTotal) }} →
+                                            {{ currencyFormatter(driver.currentTotal) }}
+                                        </span>
+                                    </span>
+                                    <span
+                                        class="shrink-0 font-medium tabular-nums"
+                                        :class="spendingChangeClass(driver.difference)"
+                                        >{{ signedCurrency(driver.difference) }}</span
+                                    >
+                                </Link>
+                            </li>
+                        </ul>
+                    </template>
+                    <Link
+                        :href="monthlyComparison.expensesUrl"
+                        class="mt-3 inline-block text-xs font-medium text-indigo-600 hover:underline dark:text-indigo-400"
+                    >
+                        View {{ monthlyComparison.currentLabel }} expenses
+                    </Link>
+                </div>
+                <p v-else class="px-5 py-4 text-sm text-gray-500 dark:text-gray-400">
+                    Monthly comparisons will appear after the first completed month.
+                </p>
+                <div
+                    v-if="annualComparison"
+                    data-testid="annual-comparison"
+                    class="border-t border-gray-950/5 px-5 py-4 dark:border-white/10"
+                >
+                    <h3 class="text-xs font-medium text-gray-500 dark:text-gray-400">
+                        Same period last year
+                    </h3>
+                    <p class="mt-2 text-sm font-semibold text-gray-900 dark:text-white">
+                        {{ comparisonLabel(annualComparison) }}
+                    </p>
+                    <p
+                        v-if="annualComparison.percentageChange !== null"
+                        class="mt-1 text-xs"
+                        :class="spendingChangeClass(annualComparison.difference)"
+                    >
+                        {{
+                            percentageLabel(
+                                annualComparison.percentageChange,
+                                annualComparison.difference
+                            )
+                        }}
+                    </p>
+                    <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                        {{ annualComparison.previousLabel }}:
+                        {{ currencyFormatter(annualComparison.previousTotal) }}
+                    </p>
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        {{ annualComparison.currentLabel }}:
+                        {{ currencyFormatter(annualComparison.currentTotal) }}
+                    </p>
+                    <p
+                        v-if="missingComparisonRecords(annualComparison)"
+                        class="mt-2 text-xs text-gray-500 dark:text-gray-400"
+                    >
+                        {{ missingComparisonRecords(annualComparison) }}
+                    </p>
+                </div>
+            </section>
+
+            <section
+                class="mt-6 rounded-xl bg-white shadow-sm ring-1 ring-gray-950/5 dark:bg-white/5 dark:ring-white/10"
+            >
+                <div class="border-b border-gray-950/5 px-5 py-4 dark:border-white/10">
+                    <h2 class="text-sm font-semibold text-gray-900 dark:text-white">
+                        Monthly cashflow
+                    </h2>
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        Select a month to view its expenses.
+                    </p>
+                </div>
+                <ul
+                    class="grid grid-cols-[auto_minmax(0,1fr)_auto] gap-x-3 divide-y divide-gray-950/5 dark:divide-white/10"
+                >
+                    <li
+                        v-for="month in visibleMonths"
+                        :key="month.monthKey"
+                        :data-testid="`cashflow-${month.monthKey}`"
+                        class="col-span-full grid grid-cols-subgrid px-5 py-3"
+                    >
+                        <div
+                            class="col-span-full flex flex-wrap items-center justify-between gap-x-4 gap-y-1"
+                        >
+                            <div class="flex items-center gap-2">
+                                <Link
+                                    :href="month.expensesUrl"
+                                    class="text-xs font-semibold text-indigo-600 hover:underline dark:text-indigo-400"
+                                    :aria-label="`View expenses for ${month.label} ${month.monthKey.slice(0, 4)}`"
+                                >
+                                    {{ month.label }}
+                                </Link>
+                                <span
+                                    v-if="month.isCurrent"
+                                    class="rounded bg-indigo-50 px-1.5 py-0.5 text-xs text-indigo-700 dark:bg-indigo-400/10 dark:text-indigo-300"
+                                    >In progress</span
+                                >
+                                <span
+                                    v-else-if="!month.hasExpenses && !month.hasIncome"
+                                    class="text-xs text-gray-400 dark:text-gray-500"
+                                    >No records</span
+                                >
+                            </div>
+                            <span
+                                class="text-right text-xs font-medium tabular-nums"
+                                :class="balanceClass(month.net)"
+                            >
+                                Net
+                                {{
+                                    month.hasExpenses || month.hasIncome
+                                        ? signedCurrency(month.net)
+                                        : '—'
+                                }}
+                            </span>
+                        </div>
+                        <div
+                            class="col-span-full mt-2 grid grid-cols-subgrid items-center gap-y-2 text-xs"
+                        >
+                            <span class="text-gray-500 dark:text-gray-400">Income</span>
+                            <div
+                                data-testid="cashflow-bar-track"
+                                class="h-1.5 rounded-full bg-gray-100 dark:bg-white/10"
+                            >
+                                <div
+                                    class="h-1.5 rounded-full bg-emerald-400 transition-all duration-300 dark:bg-emerald-500"
+                                    :style="{ width: flowWidth(month.income) }"
+                                ></div>
+                            </div>
+                            <span
+                                data-testid="income-amount"
+                                class="text-right font-medium whitespace-nowrap text-gray-900 tabular-nums dark:text-white"
+                                >{{ currencyFormatter(month.income) }}</span
+                            >
+                            <span class="text-gray-500 dark:text-gray-400">Spent</span>
+                            <div
+                                data-testid="cashflow-bar-track"
+                                class="h-1.5 rounded-full bg-gray-100 dark:bg-white/10"
+                            >
+                                <div
+                                    class="h-1.5 rounded-full bg-indigo-400 transition-all duration-300 dark:bg-indigo-500"
+                                    :style="{ width: flowWidth(month.spent) }"
+                                ></div>
+                            </div>
+                            <span
+                                data-testid="spent-amount"
+                                class="text-right font-medium whitespace-nowrap text-gray-900 tabular-nums dark:text-white"
+                                >{{ currencyFormatter(month.spent) }}</span
+                            >
+                        </div>
+                    </li>
+                </ul>
+            </section>
+
+            <section
+                v-if="categoryTotals.length"
+                data-testid="category-comparison"
+                class="mt-6 rounded-xl bg-white shadow-sm ring-1 ring-gray-950/5 dark:bg-white/5 dark:ring-white/10"
+            >
+                <div class="border-b border-gray-950/5 px-5 py-4 dark:border-white/10">
+                    <h2 class="text-sm font-semibold text-gray-900 dark:text-white">
+                        Spending by category
+                    </h2>
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        All expenses · changes compare the same period last year
+                    </p>
+                </div>
+                <table class="w-full text-left text-sm">
+                    <thead
+                        class="hidden text-xs text-gray-500 sm:table-header-group dark:text-gray-400"
+                    >
+                        <tr>
+                            <th scope="col" class="px-5 pt-4 pb-2 font-medium">Category / share</th>
+                            <th scope="col" class="px-3 pt-4 pb-2 text-right font-medium">Total</th>
+                            <th scope="col" class="px-5 pt-4 pb-2 text-right font-medium">
+                                Change vs last year
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-950/5 dark:divide-white/10">
+                        <tr
+                            v-for="category in visibleCategories"
+                            :key="category.id ?? 'other'"
+                            :data-testid="
+                                category.id === null
+                                    ? 'other-categories'
+                                    : `report-category-${category.id}`
+                            "
+                            class="grid grid-cols-2 gap-x-3 px-5 py-3 sm:table-row"
+                        >
+                            <th scope="row" class="col-span-2 pb-2 font-medium sm:px-5 sm:py-3">
+                                <Link
+                                    v-if="category.expensesUrl"
+                                    :href="category.expensesUrl"
+                                    class="wrap-anywhere text-indigo-600 hover:underline dark:text-indigo-400"
+                                    >{{ category.name }}</Link
+                                >
+                                <span v-else class="text-gray-900 dark:text-white">{{
+                                    category.name
+                                }}</span>
+                                <span
+                                    class="mt-1 block text-xs font-normal text-gray-500 dark:text-gray-400"
+                                    >{{ category.share }}% of spending</span
+                                >
+                            </th>
+                            <td
+                                class="text-gray-900 tabular-nums sm:px-3 sm:py-3 sm:text-right dark:text-white"
+                            >
+                                <span
+                                    class="mb-1 block text-xs text-gray-500 sm:hidden dark:text-gray-400"
+                                    >Total</span
+                                >
+                                {{ currencyFormatter(category.total) }}
+                            </td>
+                            <td class="text-right tabular-nums sm:px-5 sm:py-3">
+                                <span
+                                    class="mb-1 block text-xs text-gray-500 sm:hidden dark:text-gray-400"
+                                    >Change vs last year</span
+                                >
+                                <template v-if="annualComparison?.previousHasExpenses">
+                                    <span :class="spendingChangeClass(category.change)">{{
+                                        signedCurrency(category.change)
+                                    }}</span>
+                                    <span
+                                        class="mt-1 block text-xs text-gray-500 dark:text-gray-400"
+                                        >{{
+                                            category.changePercent === null
+                                                ? 'No prior records'
+                                                : percentageLabel(
+                                                      category.changePercent,
+                                                      category.change
+                                                  )
+                                        }}</span
+                                    >
+                                </template>
+                                <span v-else class="text-xs text-gray-500 dark:text-gray-400"
+                                    >No prior records</span
+                                >
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div
+                    v-if="categoryTotals.length > 8"
+                    class="border-t border-gray-950/5 px-5 py-3 dark:border-white/10"
+                >
+                    <button
+                        type="button"
+                        :aria-expanded="showAllCategories"
+                        @click="showAllCategories = !showAllCategories"
+                        class="cursor-pointer text-xs font-medium text-indigo-600 hover:underline dark:text-indigo-400"
+                    >
+                        {{
+                            showAllCategories
+                                ? 'Show top 8 categories'
+                                : `Show all ${categoryTotals.length} categories`
+                        }}
+                    </button>
+                </div>
+            </section>
+
+            <details
+                v-if="biggestExpenses.length"
+                :key="fy"
+                data-testid="biggest-expenses"
+                class="group mt-6 rounded-xl bg-white shadow-sm ring-1 ring-gray-950/5 dark:bg-white/5 dark:ring-white/10"
+            >
+                <summary
+                    class="cursor-pointer px-5 py-4 text-sm font-semibold text-gray-900 dark:text-white"
+                >
+                    Biggest expenses
+                </summary>
+                <ul
+                    class="divide-y divide-gray-950/5 border-t border-gray-950/5 dark:divide-white/10 dark:border-white/10"
+                >
                     <li v-for="expense in biggestExpenses" :key="expense.id">
                         <Link
-                            :href="`/expenses/${expense.id}/edit`"
+                            :href="expense.url"
                             class="flex items-center justify-between gap-4 px-5 py-3.5 transition-colors hover:bg-gray-50 dark:hover:bg-white/5"
                         >
                             <div class="min-w-0">
-                                <p class="truncate text-sm font-medium text-gray-900 dark:text-white">
+                                <p
+                                    class="truncate text-sm font-medium text-gray-900 dark:text-white"
+                                >
                                     {{ expense.category }}
-                                    <span
-                                        v-if="expense.isOneTime"
-                                        class="ml-1 inline-flex items-center rounded-md bg-amber-50 px-1.5 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-amber-600/20 ring-inset dark:bg-amber-400/10 dark:text-amber-400 dark:ring-amber-400/20"
-                                    >
-                                        one-time
-                                    </span>
-                                    <span
-                                        v-if="expense.note"
-                                        class="ml-1 font-normal text-gray-400 dark:text-gray-500"
-                                    >
-                                        · {{ expense.note }}
-                                    </span>
                                 </p>
-                                <p class="mt-0.5 text-xs text-gray-400 dark:text-gray-500">
+                                <p
+                                    v-if="expense.note"
+                                    class="mt-1 text-xs break-words text-gray-500 dark:text-gray-400"
+                                >
+                                    {{ expense.note }}
+                                </p>
+                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
                                     {{ expense.date }}
                                 </p>
                             </div>
                             <p
-                                class="shrink-0 text-sm font-semibold tabular-nums text-gray-900 dark:text-white"
+                                class="shrink-0 text-sm font-semibold text-gray-900 tabular-nums dark:text-white"
                             >
                                 {{ currencyFormatter(expense.amount) }}
                             </p>
                         </Link>
                     </li>
                 </ul>
-            </div>
+            </details>
         </template>
     </div>
 </template>
@@ -292,10 +468,9 @@
 <script setup lang="ts">
 import PageHeader from '@/Components/PageHeader.vue';
 import { FinancialYearOption } from '@/types/app/Models/Income';
-import compactCurrencyFormatter from '@/utils/compactCurrencyFormatter';
 import currencyFormatter from '@/utils/currencyFormatter';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 interface MonthCashflow {
     monthKey: string;
@@ -305,112 +480,163 @@ interface MonthCashflow {
     net: number;
     isCurrent: boolean;
     isFuture: boolean;
+    hasExpenses: boolean;
+    hasIncome: boolean;
+    expensesUrl: string;
 }
 
-interface CategoryTrend {
+interface SpendingComparison {
+    currentLabel: string;
+    previousLabel: string;
+    currentTotal: number;
+    previousTotal: number;
+    difference: number;
+    percentageChange: number | null;
+    currentHasExpenses: boolean;
+    previousHasExpenses: boolean;
+}
+
+interface CategoryTotal {
+    id: number | null;
     name: string;
     total: number;
-    count: number;
     share: number;
-    avgPerMonth: number;
-    monthly: number[];
+    previousTotal: number;
+    change: number;
+    changePercent: number | null;
+    expensesUrl: string | null;
 }
 
-interface BiggestExpense {
-    id: number;
-    date: string;
-    category: string;
-    note: string | null;
-    amount: number;
-    isOneTime: boolean;
-}
-
-const props = defineProps<{
-    fy: number;
-    fyLabel: string;
-    availableFys: FinancialYearOption[];
-    empty: boolean;
-    cashflow?: {
-        income: number;
-        spent: number;
-        saved: number;
-        savingsRate: number | null;
-        avgMonthlySpend: number;
-        regularSpent: number;
-        oneTimeSpent: number;
-        oneTimeCount: number;
-        coreSaved: number;
-        coreSavingsRate: number | null;
-        avgMonthlyRegularSpend: number;
-    };
-    monthly?: MonthCashflow[];
-    categoryTrends?: CategoryTrend[];
-    biggestExpenses?: BiggestExpense[];
-}>();
-
-const hasOneTime = computed(() => (props.cashflow?.oneTimeSpent ?? 0) > 0);
-
-const noIncomeRecorded = computed(
-    () => props.cashflow !== undefined && props.cashflow.income === 0 && props.cashflow.spent > 0,
+const props = withDefaults(
+    defineProps<{
+        fy: number;
+        fyLabel: string;
+        availableFys: FinancialYearOption[];
+        empty: boolean;
+        period: {
+            label: string;
+            startDate: string;
+            endDate: string;
+            isCurrent: boolean;
+            completedMonths: number;
+            averageLabel: string;
+        };
+        cashflow?: {
+            income: number;
+            spent: number;
+            net: number;
+            netRate: number | null;
+            avgMonthlySpend: number | null;
+        };
+        monthly?: MonthCashflow[];
+        monthlyComparison?:
+            | (SpendingComparison & {
+                  expensesUrl: string;
+                  drivers: {
+                      categoryId: number;
+                      name: string;
+                      currentTotal: number;
+                      previousTotal: number;
+                      difference: number;
+                      expensesUrl: string;
+                  }[];
+              })
+            | null;
+        annualComparison?: SpendingComparison;
+        categoryTotals?: CategoryTotal[];
+        biggestExpenses?: {
+            id: number;
+            date: string;
+            category: string;
+            note: string | null;
+            amount: number;
+            url: string;
+        }[];
+    }>(),
+    {
+        monthly: () => [],
+        categoryTotals: () => [],
+        biggestExpenses: () => [],
+    }
 );
 
 const selectedFy = ref(props.fy);
+const showAllCategories = ref(false);
+
+watch(
+    () => props.fy,
+    (fy) => {
+        selectedFy.value = fy;
+        showAllCategories.value = false;
+    }
+);
 
 const switchFy = () => {
     router.get('/reports', { fy: selectedFy.value }, { preserveScroll: true });
 };
 
-const visibleMonths = computed(() =>
-    (props.monthly ?? []).filter(
-        (month) => !month.isFuture || month.spent > 0 || month.income > 0,
-    ),
-);
-
-const monthLabels = computed(() => (props.monthly ?? []).map((month) => month.label));
-
-const currentMonthIndex = computed(() =>
-    (props.monthly ?? []).findIndex((month) => month.isCurrent),
-);
-
+const visibleMonths = computed(() => props.monthly.filter((month) => !month.isFuture));
 const maxFlow = computed(() =>
-    Math.max(...visibleMonths.value.map((month) => Math.max(month.spent, month.income)), 1),
+    Math.max(...visibleMonths.value.map((month) => Math.max(month.spent, month.income)), 1)
 );
-
-const flowWidth = (value: number) => {
-    if (value <= 0) {
-        return '0%';
+const flowWidth = (value: number) => `${Math.max(0, (value / maxFlow.value) * 100)}%`;
+const signedCurrency = (value: number) =>
+    `${value > 0 ? '+' : value < 0 ? '−' : ''}${currencyFormatter(Math.abs(value))}`;
+const balanceClass = (value: number) =>
+    value === 0
+        ? 'text-gray-500 dark:text-gray-400'
+        : value > 0
+          ? 'text-emerald-600 dark:text-emerald-400'
+          : 'text-rose-600 dark:text-rose-400';
+const spendingChangeClass = (value: number) => balanceClass(-value);
+const percentageLabel = (value: number, difference: number) => {
+    if (difference === 0) {
+        return 'No change';
     }
 
-    return Math.max(2, Math.round((value / maxFlow.value) * 100)) + '%';
+    return `${value === 0 ? '<0.1' : Math.abs(value)}% ${difference > 0 ? 'increase' : 'decrease'}`;
 };
 
-const trendBarHeight = (value: number, trend: CategoryTrend) => {
-    if (value <= 0) {
-        return '2px';
+const comparisonLabel = (comparison: SpendingComparison) => {
+    if (!comparison.currentHasExpenses && !comparison.previousHasExpenses) {
+        return 'No expenses recorded in either period.';
     }
-
-    const max = Math.max(...trend.monthly, 1);
-
-    return Math.max(4, Math.round((value / max) * 36)) + 'px';
-};
-
-const netClass = (month: MonthCashflow) => {
-    if (month.spent === 0 && month.income === 0) {
-        return 'text-gray-300 dark:text-gray-600';
+    if (comparison.difference === 0) {
+        return 'Recorded spending did not change.';
     }
-
-    return month.net >= 0
-        ? 'text-emerald-600 dark:text-emerald-400'
-        : 'text-rose-500 dark:text-rose-400';
+    return `Recorded spending ${comparison.difference > 0 ? 'increased' : 'decreased'} by ${currencyFormatter(Math.abs(comparison.difference))}`;
 };
 
-const netLabel = (month: MonthCashflow) => {
-    if (month.spent === 0 && month.income === 0) {
-        return '—';
+const missingComparisonRecords = (comparison: SpendingComparison) => {
+    if (comparison.currentHasExpenses === comparison.previousHasExpenses) {
+        return null;
     }
-
-    const sign = month.net >= 0 ? '+' : '−';
-
-    return sign + compactCurrencyFormatter(Math.abs(month.net));
+    return `No expenses recorded in ${comparison.currentHasExpenses ? comparison.previousLabel : comparison.currentLabel}.`;
 };
+
+const visibleCategories = computed<CategoryTotal[]>(() => {
+    if (showAllCategories.value || props.categoryTotals.length <= 8) {
+        return props.categoryTotals;
+    }
+    const remaining = props.categoryTotals.slice(8);
+    const total = remaining.reduce((sum, category) => sum + category.total, 0);
+    const previousTotal = remaining.reduce((sum, category) => sum + category.previousTotal, 0);
+    const change = Math.round((total - previousTotal) * 100) / 100;
+    return [
+        ...props.categoryTotals.slice(0, 8),
+        {
+            id: null,
+            name: 'Other categories',
+            total,
+            previousTotal,
+            change,
+            share: props.cashflow?.spent
+                ? Math.round((total / props.cashflow.spent) * 1000) / 10
+                : 0,
+            changePercent:
+                previousTotal > 0 ? Math.round((change / previousTotal) * 1000) / 10 : null,
+            expensesUrl: null,
+        },
+    ];
+});
 </script>

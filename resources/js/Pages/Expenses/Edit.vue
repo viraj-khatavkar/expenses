@@ -37,18 +37,10 @@
                     :error="errors.note"
                     v-model="form.note"
                 />
-                <CheckboxInput
-                    name="is_one_time"
-                    label="One-time expense"
-                    description="Kept out of regular spending stats"
-                    v-model="form.is_one_time"
-                />
             </div>
             <div class="mt-8 flex items-center gap-4">
                 <PrimaryButton type="submit" :disabled="processing">Update</PrimaryButton>
-                <DangerButton type="button" @click="confirmingDelete = true">
-                    Delete
-                </DangerButton>
+                <DangerButton type="button" @click="confirmingDelete = true"> Delete </DangerButton>
             </div>
         </Form>
 
@@ -72,7 +64,6 @@ import { Form, Head, router } from '@inertiajs/vue3';
 import { reactive, ref } from 'vue';
 import DangerButton from '../../Components/Button/DangerButton.vue';
 import PrimaryButton from '../../Components/Button/PrimaryButton.vue';
-import CheckboxInput from '../../Components/Form/CheckboxInput.vue';
 import SelectInput from '../../Components/Form/SelectInput.vue';
 import TextInput from '../../Components/Form/TextInput.vue';
 
@@ -86,7 +77,6 @@ const form = reactive({
     amount: props.expense.amount,
     category_id: props.expense.category_id,
     note: props.expense.note ?? '',
-    is_one_time: props.expense.is_one_time,
 });
 
 const confirmingDelete = ref(false);

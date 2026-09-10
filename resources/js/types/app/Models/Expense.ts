@@ -5,7 +5,6 @@ export interface Expense {
     date: string;
     amount: number;
     note: string | null;
-    is_one_time: boolean;
     category_id: bigint;
     category: Category;
 }

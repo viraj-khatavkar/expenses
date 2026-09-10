@@ -2,15 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Action\GetExpensesForMonthAction;
-use App\Action\GetTotalExpensesForMonthAction;
+use App\Action\GetExpenseDayGroupsAction;
+use App\Http\Requests\ExpenseIndexRequest;
 use App\Http\Requests\ExpenseRequest;
 use App\Models\Category;
 use App\Models\Expense;
-use Carbon\Carbon;
-use Carbon\Exceptions\InvalidFormatException;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Date;
 use Inertia\Response;
 
@@ -25,17 +22,28 @@ final class ExpenseController extends Controller
         ]);
     }
 
-    public function index(Request $request): Response
+    public function index(ExpenseIndexRequest $request, GetExpenseDayGroupsAction $getExpenseDayGroups): Response
     {
+        $filters = $request->validated();
         $currentMonth = Date::today()->startOfMonth();
-        $selectedMonth = $this->resolveMonth($request->input('month'), $currentMonth);
+        $isDateRange = isset($filters['start_date'], $filters['end_date']);
+        $startDate = $isDateRange
+            ? Date::parse($filters['start_date'])
+            : Date::createFromFormat('!Y-m', $filters['month'] ?? $currentMonth->format('Y-m'));
+        $endDate = $isDateRange ? Date::parse($filters['end_date']) : $startDate->copy()->endOfMonth();
+        $category = isset($filters['category_id']) ? Category::query()->findOrFail($filters['category_id'], ['id', 'name']) : null;
+        $expenseGroups = $getExpenseDayGroups->handle($startDate, $endDate, $category?->id);
 
         return inertia('Expenses/Index', [
-            'month' => $selectedMonth->format('Y-m'),
-            'monthLabel' => $selectedMonth->format('F Y'),
-            'isCurrentMonth' => $selectedMonth->equalTo($currentMonth),
-            'expenseGroups' => app(GetExpensesForMonthAction::class)->handle($selectedMonth),
-            'total' => app(GetTotalExpensesForMonthAction::class)->handle($selectedMonth),
+            'month' => $startDate->format('Y-m'),
+            'monthLabel' => $startDate->format('F Y'),
+            'isCurrentMonth' => ! $isDateRange && $startDate->equalTo($currentMonth),
+            'isDateRange' => $isDateRange,
+            'periodLabel' => $isDateRange ? $startDate->format('d M Y').' to '.$endDate->format('d M Y') : $startDate->format('F Y'),
+            'categoryFilter' => $category,
+            'expensesUrl' => route('expenses.index'),
+            'expenseGroups' => $expenseGroups,
+            'total' => round((float) $expenseGroups->sum('total'), 2),
         ]);
     }
 
@@ -71,19 +79,6 @@ final class ExpenseController extends Controller
 
         return to_route('expenses.index', $parameters)
             ->with('success', 'Expense deleted successfully.');
-    }
-
-    private function resolveMonth(?string $month, Carbon $currentMonth): Carbon
-    {
-        if ($month === null) {
-            return $currentMonth->copy();
-        }
-
-        try {
-            return Carbon::createFromFormat('!Y-m', $month)->startOfMonth();
-        } catch (InvalidFormatException) {
-            return $currentMonth->copy();
-        }
     }
 
     /**

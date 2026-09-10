@@ -3,7 +3,7 @@
         <Head title="Expenses" />
 
         <PageHeader title="Expenses">
-            <div class="flex items-center gap-1">
+            <div v-if="!isDateRange" class="flex items-center gap-1">
                 <button
                     type="button"
                     data-test="prev-month"
@@ -13,9 +13,7 @@
                 >
                     <ChevronLeftIcon class="size-5" aria-hidden="true" />
                 </button>
-                <span
-                    class="w-32 text-center text-sm font-semibold text-gray-900 dark:text-white"
-                >
+                <span class="w-32 text-center text-sm font-semibold text-gray-900 dark:text-white">
                     {{ monthLabel }}
                 </span>
                 <button
@@ -31,8 +29,27 @@
             </div>
         </PageHeader>
 
-        <Stat>
-            <template #header>Spent in {{ monthLabel }}</template>
+        <div
+            v-if="isDateRange || categoryFilter"
+            class="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-lg bg-indigo-50 px-4 py-3 text-sm dark:bg-indigo-500/10"
+        >
+            <p class="min-w-0 wrap-anywhere text-indigo-900 dark:text-indigo-200">
+                <span class="font-semibold">{{ categoryFilter?.name ?? 'All categories' }}</span>
+                <span class="block">{{ periodLabel }}</span>
+            </p>
+            <Link
+                :href="expensesUrl"
+                class="font-medium text-indigo-700 underline underline-offset-4 dark:text-indigo-300"
+            >
+                Clear filters
+            </Link>
+        </div>
+
+        <Stat class="wrap-anywhere">
+            <template #header>
+                {{ categoryFilter ? `${categoryFilter.name} spending` : 'Spent' }} in
+                {{ periodLabel }}
+            </template>
             {{ currencyFormatter(total) }}
         </Stat>
 
@@ -41,7 +58,8 @@
             class="mt-6 rounded-xl bg-white px-6 py-16 text-center shadow-sm ring-1 ring-gray-950/5 dark:bg-white/5 dark:ring-white/10"
         >
             <p class="text-sm text-gray-400 dark:text-gray-500">
-                No expenses in {{ monthLabel }}.
+                No expenses{{ categoryFilter ? ` for ${categoryFilter.name}` : '' }} in
+                {{ periodLabel }}.
             </p>
             <Link v-if="isCurrentMonth" href="/expenses/create" class="mt-5 inline-block">
                 <PrimaryButton>Add an expense</PrimaryButton>
@@ -60,7 +78,7 @@
                         {{ group.label }}
                     </h3>
                     <span
-                        class="text-sm/6 font-semibold tabular-nums text-gray-500 dark:text-gray-400"
+                        class="text-sm/6 font-semibold text-gray-500 tabular-nums dark:text-gray-400"
                     >
                         {{ currencyFormatter(group.total) }}
                     </span>
@@ -73,15 +91,9 @@
                         >
                             <div class="min-w-0">
                                 <p
-                                    class="text-sm/6 font-semibold text-gray-800 dark:text-white"
+                                    class="text-sm/6 font-semibold wrap-anywhere text-gray-800 dark:text-white"
                                 >
                                     {{ expense.category.name }}
-                                    <span
-                                        v-if="expense.is_one_time"
-                                        class="ml-1 inline-flex items-center rounded-md bg-amber-50 px-1.5 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-amber-600/20 ring-inset dark:bg-amber-400/10 dark:text-amber-400 dark:ring-amber-400/20"
-                                    >
-                                        one-time
-                                    </span>
                                 </p>
                                 <p
                                     v-if="expense.note"
@@ -91,7 +103,7 @@
                                 </p>
                             </div>
                             <p
-                                class="shrink-0 text-sm/6 font-semibold tabular-nums text-gray-900 dark:text-white"
+                                class="shrink-0 text-sm/6 font-semibold text-gray-900 tabular-nums dark:text-white"
                             >
                                 {{ currencyFormatter(expense.amount) }}
                             </p>
@@ -103,8 +115,8 @@
     </div>
 </template>
 <script setup lang="ts">
-import PageHeader from '@/Components/PageHeader.vue';
 import PrimaryButton from '@/Components/Button/PrimaryButton.vue';
+import PageHeader from '@/Components/PageHeader.vue';
 import Stat from '@/Components/Stat.vue';
 import { ExpenseDayGroup } from '@/types/app/Models/Expense';
 import currencyFormatter from '@/utils/currencyFormatter';
@@ -116,14 +128,23 @@ const props = defineProps<{
     month: string;
     monthLabel: string;
     isCurrentMonth: boolean;
+    isDateRange: boolean;
+    periodLabel: string;
+    categoryFilter: { id: number; name: string } | null;
+    expensesUrl: string;
     expenseGroups: ExpenseDayGroup[];
     total: number;
 }>();
 
 const goToMonth = (delta: number) => {
     const target = dayjs(`${props.month}-01`).add(delta, 'month').format('YYYY-MM');
-    const params = target === dayjs().format('YYYY-MM') ? {} : { month: target };
+    const params: { month?: string; category_id?: number } =
+        target === dayjs().format('YYYY-MM') ? {} : { month: target };
 
-    router.get('/expenses', params, { preserveScroll: true });
+    if (props.categoryFilter) {
+        params.category_id = props.categoryFilter.id;
+    }
+
+    router.get(props.expensesUrl, params, { preserveScroll: true });
 };
 </script>
