@@ -34,7 +34,7 @@
                     <p
                         class="mt-1 text-2xl font-bold break-words text-gray-900 tabular-nums dark:text-white"
                     >
-                        {{ currencyFormatter(cashflow!.income) }}
+                        {{ compactCurrencyFormatter(cashflow!.income) }}
                     </p>
                 </div>
                 <div
@@ -44,13 +44,13 @@
                     <p
                         class="mt-1 text-2xl font-bold break-words text-gray-900 tabular-nums dark:text-white"
                     >
-                        {{ currencyFormatter(cashflow!.spent) }}
+                        {{ compactCurrencyFormatter(cashflow!.spent) }}
                     </p>
                     <p
                         v-if="cashflow!.avgMonthlySpend !== null"
                         class="mt-2 text-xs text-gray-500 dark:text-gray-400"
                     >
-                        {{ currencyFormatter(cashflow!.avgMonthlySpend) }}/mo average
+                        {{ compactCurrencyFormatter(cashflow!.avgMonthlySpend) }}/mo average
                     </p>
                     <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
                         {{ period.averageLabel }}
@@ -116,7 +116,7 @@
                                 {{ monthlyComparison.previousLabel }}
                             </dt>
                             <dd class="mt-1 font-medium text-gray-900 tabular-nums dark:text-white">
-                                {{ currencyFormatter(monthlyComparison.previousTotal) }}
+                                {{ compactCurrencyFormatter(monthlyComparison.previousTotal) }}
                             </dd>
                         </div>
                         <div>
@@ -124,7 +124,7 @@
                                 {{ monthlyComparison.currentLabel }}
                             </dt>
                             <dd class="mt-1 font-medium text-gray-900 tabular-nums dark:text-white">
-                                {{ currencyFormatter(monthlyComparison.currentTotal) }}
+                                {{ compactCurrencyFormatter(monthlyComparison.currentTotal) }}
                             </dd>
                         </div>
                     </dl>
@@ -155,8 +155,8 @@
                                         <span
                                             class="mt-1 block text-xs text-gray-500 tabular-nums dark:text-gray-400"
                                         >
-                                            {{ currencyFormatter(driver.previousTotal) }} →
-                                            {{ currencyFormatter(driver.currentTotal) }}
+                                            {{ compactCurrencyFormatter(driver.previousTotal) }} →
+                                            {{ compactCurrencyFormatter(driver.currentTotal) }}
                                         </span>
                                     </span>
                                     <span
@@ -203,11 +203,11 @@
                     </p>
                     <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
                         {{ annualComparison.previousLabel }}:
-                        {{ currencyFormatter(annualComparison.previousTotal) }}
+                        {{ compactCurrencyFormatter(annualComparison.previousTotal) }}
                     </p>
                     <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
                         {{ annualComparison.currentLabel }}:
-                        {{ currencyFormatter(annualComparison.currentTotal) }}
+                        {{ compactCurrencyFormatter(annualComparison.currentTotal) }}
                     </p>
                     <p
                         v-if="missingComparisonRecords(annualComparison)"
@@ -288,7 +288,7 @@
                             <span
                                 data-testid="income-amount"
                                 class="text-right font-medium whitespace-nowrap text-gray-900 tabular-nums dark:text-white"
-                                >{{ currencyFormatter(month.income) }}</span
+                                >{{ compactCurrencyFormatter(month.income) }}</span
                             >
                             <span class="text-gray-500 dark:text-gray-400">Spent</span>
                             <div
@@ -303,7 +303,7 @@
                             <span
                                 data-testid="spent-amount"
                                 class="text-right font-medium whitespace-nowrap text-gray-900 tabular-nums dark:text-white"
-                                >{{ currencyFormatter(month.spent) }}</span
+                                >{{ compactCurrencyFormatter(month.spent) }}</span
                             >
                         </div>
                     </li>
@@ -368,7 +368,7 @@
                                     class="mb-1 block text-xs text-gray-500 sm:hidden dark:text-gray-400"
                                     >Total</span
                                 >
-                                {{ currencyFormatter(category.total) }}
+                                {{ compactCurrencyFormatter(category.total) }}
                             </td>
                             <td class="text-right tabular-nums sm:px-5 sm:py-3">
                                 <span
@@ -455,7 +455,7 @@
                             <p
                                 class="shrink-0 text-sm font-semibold text-gray-900 tabular-nums dark:text-white"
                             >
-                                {{ currencyFormatter(expense.amount) }}
+                                {{ compactCurrencyFormatter(expense.amount) }}
                             </p>
                         </Link>
                     </li>
@@ -468,7 +468,7 @@
 <script setup lang="ts">
 import PageHeader from '@/Components/PageHeader.vue';
 import { FinancialYearOption } from '@/types/app/Models/Income';
-import currencyFormatter from '@/utils/currencyFormatter';
+import compactCurrencyFormatter from '@/utils/compactCurrencyFormatter';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 
@@ -581,7 +581,7 @@ const maxFlow = computed(() =>
 );
 const flowWidth = (value: number) => `${Math.max(0, (value / maxFlow.value) * 100)}%`;
 const signedCurrency = (value: number) =>
-    `${value > 0 ? '+' : value < 0 ? '−' : ''}${currencyFormatter(Math.abs(value))}`;
+    `${value > 0 ? '+' : value < 0 ? '−' : ''}${compactCurrencyFormatter(Math.abs(value))}`;
 const balanceClass = (value: number) =>
     value === 0
         ? 'text-gray-500 dark:text-gray-400'
@@ -604,7 +604,7 @@ const comparisonLabel = (comparison: SpendingComparison) => {
     if (comparison.difference === 0) {
         return 'Recorded spending did not change.';
     }
-    return `Recorded spending ${comparison.difference > 0 ? 'increased' : 'decreased'} by ${currencyFormatter(Math.abs(comparison.difference))}`;
+    return `Recorded spending ${comparison.difference > 0 ? 'increased' : 'decreased'} by ${compactCurrencyFormatter(Math.abs(comparison.difference))}`;
 };
 
 const missingComparisonRecords = (comparison: SpendingComparison) => {

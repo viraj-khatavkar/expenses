@@ -14,19 +14,19 @@ afterEach(function () {
     $this->travelBack();
 });
 
-it('shows full cashflow amounts for the financial year', function () {
+it('shows short cashflow amounts for the financial year', function () {
     $user = User::factory()->create();
-    Expense::factory()->create(['amount' => 40000, 'date' => Date::today()]);
-    Income::factory()->create(['amount' => 100000, 'date' => Date::today()]);
+    Expense::factory()->create(['amount' => 51000, 'date' => Date::today()]);
+    Income::factory()->create(['amount' => 265000, 'date' => Date::today()]);
 
     loginAs($user->email)
         ->navigate('/reports')
-        ->assertSeeIn('[data-testid="cashflow-summary"]', '₹1,00,000')
-        ->assertSeeIn('[data-testid="cashflow-summary"]', '₹40,000')
+        ->assertSeeIn('[data-testid="cashflow-summary"]', '₹2.65L')
+        ->assertSeeIn('[data-testid="cashflow-summary"]', '₹51K')
         ->assertSeeIn('[data-testid="cashflow-summary"]', 'Net cashflow')
-        ->assertSeeIn('[data-testid="cashflow-summary"]', '+₹60,000')
+        ->assertSeeIn('[data-testid="cashflow-summary"]', '+₹2.14L')
         ->assertSee('Income minus recorded expenses')
-        ->assertSee('60% of recorded income')
+        ->assertSee('80.8% of recorded income')
         ->assertNoJavaScriptErrors();
 });
 
@@ -38,7 +38,7 @@ it('shows negative net cashflow when expenses exceed income', function () {
     loginAs($user->email)
         ->navigate('/reports')
         ->assertSeeIn('[data-testid="cashflow-summary"]', 'Net cashflow')
-        ->assertSeeIn('[data-testid="cashflow-summary"]', '−₹20,000');
+        ->assertSeeIn('[data-testid="cashflow-summary"]', '−₹20K');
 });
 
 it('includes all expenses in the summary', function () {
@@ -49,8 +49,8 @@ it('includes all expenses in the summary', function () {
 
     loginAs($user->email)
         ->navigate('/reports')
-        ->assertSeeIn('[data-testid="cashflow-summary"]', '₹1,40,000')
-        ->assertSeeIn('[data-testid="cashflow-summary"]', '+₹60,000')
+        ->assertSeeIn('[data-testid="cashflow-summary"]', '₹1.4L')
+        ->assertSeeIn('[data-testid="cashflow-summary"]', '+₹60K')
         ->assertSee('30% of recorded income');
 });
 
@@ -62,7 +62,7 @@ it('shows the actual net balance after a large expense', function () {
 
     loginAs($user->email)
         ->navigate('/reports')
-        ->assertSeeIn('[data-testid="cashflow-summary"]', '−₹30,000')
+        ->assertSeeIn('[data-testid="cashflow-summary"]', '−₹30K')
         ->assertSee('-30% of recorded income');
 });
 
@@ -75,8 +75,8 @@ it('includes large expenses in category totals', function () {
 
     loginAs($user->email)
         ->navigate('/reports')
-        ->assertSeeIn('[data-testid="report-category-'.$grocery->id.'"]', '₹3,000')
-        ->assertSeeIn('[data-testid="report-category-'.$hospital->id.'"]', '₹1,00,000')
+        ->assertSeeIn('[data-testid="report-category-'.$grocery->id.'"]', '₹3K')
+        ->assertSeeIn('[data-testid="report-category-'.$hospital->id.'"]', '₹1L')
         ->assertSee('All expenses');
 });
 
@@ -86,11 +86,11 @@ it('states when no income is recorded', function () {
 
     loginAs($user->email)
         ->navigate('/reports')
-        ->assertSeeIn('[data-testid="cashflow-summary"]', '−₹50,000')
+        ->assertSeeIn('[data-testid="cashflow-summary"]', '−₹50K')
         ->assertSee('No income recorded in this period');
 });
 
-it('shows exact monthly cashflow amounts beside both bars', function (int $viewportWidth) {
+it('shows short monthly cashflow amounts beside both bars', function (int $viewportWidth) {
     $user = User::factory()->create();
     Expense::factory()->create(['amount' => 5432.10, 'date' => '2025-04-10']);
     Income::factory()->create(['amount' => 123456.78, 'date' => '2025-04-05']);
@@ -102,9 +102,9 @@ it('shows exact monthly cashflow amounts beside both bars', function (int $viewp
         ->resize($viewportWidth, 900)
         ->navigate('/reports?fy=2025')
         ->assertSee('Monthly cashflow')
-        ->assertSeeIn($april.' [data-testid="income-amount"]', '₹1,23,456.78')
-        ->assertSeeIn($april.' [data-testid="spent-amount"]', '₹5,432.10')
-        ->assertSeeIn($april, 'Net +₹1,18,024.68')
+        ->assertSeeIn($april.' [data-testid="income-amount"]', '₹1.23L')
+        ->assertSeeIn($april.' [data-testid="spent-amount"]', '₹5.43K')
+        ->assertSeeIn($april, 'Net +₹1.18L')
         ->assertSeeIn($may.' [data-testid="income-amount"]', '₹0')
         ->assertSeeIn($may.' [data-testid="spent-amount"]', '₹0')
         ->assertSeeIn($may, 'Net —')
@@ -127,7 +127,7 @@ it('shows exact monthly cashflow amounts beside both bars', function (int $viewp
     $page->click($april.' a')->assertPathIs('/expenses')->assertQueryStringHas('month', '2025-04')->assertSee('₹5,432.10');
 })->with(['desktop' => 1280, 'mobile' => 375]);
 
-it('shows zero income and exact monthly negative cashflow for recorded expenses', function () {
+it('shows zero income and short monthly negative cashflow for recorded expenses', function () {
     $user = User::factory()->create();
     Expense::factory()->create(['amount' => 5000, 'date' => '2025-04-10']);
     $april = '[data-testid="cashflow-2025-04"]';
@@ -135,8 +135,8 @@ it('shows zero income and exact monthly negative cashflow for recorded expenses'
     loginAs($user->email)
         ->navigate('/reports?fy=2025')
         ->assertSeeIn($april.' [data-testid="income-amount"]', '₹0')
-        ->assertSeeIn($april.' [data-testid="spent-amount"]', '₹5,000')
-        ->assertSeeIn($april, 'Net −₹5,000')
+        ->assertSeeIn($april.' [data-testid="spent-amount"]', '₹5K')
+        ->assertSeeIn($april, 'Net −₹5K')
         ->assertNoJavaScriptErrors();
 });
 
@@ -150,7 +150,7 @@ it('opens the matching category and report period', function () {
     loginAs($user->email)
         ->navigate('/reports')
         ->assertSee('Spending by category')
-        ->assertSeeIn('[data-testid="report-category-'.$grocery->id.'"]', '+₹2,000')
+        ->assertSeeIn('[data-testid="report-category-'.$grocery->id.'"]', '+₹2K')
         ->click('[data-testid="report-category-'.$grocery->id.'"] a')
         ->assertPathIs('/expenses')
         ->assertQueryStringHas('category_id', (string) $grocery->id)
@@ -172,7 +172,7 @@ it('keeps biggest expenses closed until selected', function () {
         ->assertAttributeMissing('[data-testid="biggest-expenses"]', 'open')
         ->click('Biggest expenses')
         ->assertSeeIn('[data-testid="biggest-expenses"]', 'New phone')
-        ->assertSeeIn('[data-testid="biggest-expenses"]', '₹84,999')
+        ->assertSeeIn('[data-testid="biggest-expenses"]', '₹85K')
         ->click('[data-testid="biggest-expenses"] a')
         ->assertPathIs('/expenses/'.$expense->id.'/edit');
 });
@@ -184,7 +184,7 @@ it('filters by financial year via the url', function () {
     loginAs($user->email)
         ->navigate('/reports?fy=2024')
         ->assertSelected('fy-switcher', '2024')
-        ->assertSee('₹7,500');
+        ->assertSee('₹7.5K');
 });
 
 it('shows an empty state when nothing is recorded', function () {
@@ -205,11 +205,11 @@ it('shows completed month changes and opens their source expenses', function () 
     loginAs($user->email)
         ->navigate('/reports')
         ->assertSeeIn('[data-testid="monthly-comparison"]', 'Aug 2026 compared with Jul 2026')
-        ->assertSeeIn('[data-testid="monthly-comparison"]', 'Recorded spending increased by ₹4,000')
+        ->assertSeeIn('[data-testid="monthly-comparison"]', 'Recorded spending increased by ₹4K')
         ->assertSeeIn('[data-testid="monthly-comparison"]', '200% increase')
-        ->assertSeeIn('[data-testid="monthly-comparison"]', '+₹3,500')
+        ->assertSeeIn('[data-testid="monthly-comparison"]', '+₹3.5K')
         ->assertSeeIn('[data-testid="cashflow-2026-09"]', 'In progress')
-        ->assertSeeIn('[data-testid="cashflow-summary"]', '₹1,600/mo average')
+        ->assertSeeIn('[data-testid="cashflow-summary"]', '₹1.6K/mo average')
         ->click('[data-testid="monthly-comparison"] li:first-child a')
         ->assertPathIs('/expenses')
         ->assertQueryStringHas('month', '2026-08')
@@ -239,10 +239,10 @@ it('shows other categories and expands the full category table on mobile', funct
     $page = loginAs($user->email)
         ->resize(375, 900)
         ->navigate('/reports')
-        ->assertSeeIn('[data-testid="other-categories"]', '₹3,000')
+        ->assertSeeIn('[data-testid="other-categories"]', '₹3K')
         ->click('Show all 10 categories')
         ->assertSeeIn('[data-testid="report-category-'.$firstCategory->id.'"]', 'Category 1')
-        ->assertSeeIn('[data-testid="report-category-'.$firstCategory->id.'"]', '₹1,000')
+        ->assertSeeIn('[data-testid="report-category-'.$firstCategory->id.'"]', '₹1K')
         ->assertDontSee('Other categories')
         ->assertNoJavaScriptErrors();
 
