@@ -266,6 +266,7 @@ import {
     ArrowPathIcon,
     AdjustmentsHorizontalIcon,
     ArrowRightStartOnRectangleIcon,
+    ArrowTrendingUpIcon,
     BanknotesIcon,
     Bars3Icon,
     ChartBarIcon,
@@ -297,6 +298,12 @@ const mainNavigation = computed(() => [
         href: '/income',
         icon: BanknotesIcon,
         current: page.url.startsWith('/income'),
+    },
+    {
+        name: 'Investments',
+        href: '/investments',
+        icon: ArrowTrendingUpIcon,
+        current: page.url.startsWith('/investments'),
     },
     {
         name: 'Subscriptions',
@@ -371,7 +378,10 @@ const showFab = computed(() => {
     const path = page.url.split('?')[0];
 
     return (
-        !path.endsWith('/create') && !path.endsWith('/edit') && !path.startsWith('/account')
+        !path.endsWith('/create') &&
+        !path.endsWith('/edit') &&
+        !path.startsWith('/account') &&
+        !path.startsWith('/investments')
     );
 });
 

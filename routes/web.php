@@ -6,6 +6,7 @@ use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\ExploreController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\IncomeController;
+use App\Http\Controllers\InvestmentController;
 use App\Http\Controllers\PasswordController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SourceController;
@@ -20,6 +21,15 @@ Route::middleware('auth')->group(function () {
     Route::resource('/expenses', ExpenseController::class)->except('show');
     Route::resource('/sources', SourceController::class)->except('show', 'destroy');
     Route::resource('/income', IncomeController::class)->except('show');
+    Route::prefix('investments')->name('investments.')
+        ->where(['period' => '[1-9][0-9]{3}-(?:0[1-9]|1[0-2])', 'transaction' => '[0-9]+'])
+        ->group(function (): void {
+            Route::get('/{period?}', [InvestmentController::class, 'index'])->name('index');
+            Route::put('/{period}/target', [InvestmentController::class, 'target'])->name('target');
+            Route::post('/transactions', [InvestmentController::class, 'store'])->name('store');
+            Route::put('/transactions/{transaction}', [InvestmentController::class, 'update'])->name('update');
+            Route::delete('/transactions/{transaction}', [InvestmentController::class, 'destroy'])->name('destroy');
+        });
     Route::resource('/subscriptions', SubscriptionController::class)->except('show');
     Route::get('/account/password', [PasswordController::class, 'edit'])->name('password.edit');
     Route::put('/account/password', [PasswordController::class, 'update'])->name('password.update');
